@@ -77,3 +77,4 @@
 /Users/matthewpenney/repos/command-centre/command-centre/obj/Debug/net10.0/command-centre.pdb
 /Users/matthewpenney/repos/command-centre/command-centre/obj/Debug/net10.0/command-centre.genruntimeconfig.cache
 /Users/matthewpenney/repos/command-centre/command-centre/obj/Debug/net10.0/ref/command-centre.dll
+/Users/matthewpenney/repos/command-centre/command-centre/obj/Debug/net10.0/command-centre.sourcelink.json
