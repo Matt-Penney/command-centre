@@ -1,0 +1,72 @@
+@namespace CommandCentre.Components
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using RazorConsole.Components
+@using Spectre.Console
+
+<Figlet Content="Dashboard" />
+<Newline />
+<Align Horizontal="HorizontalAlignment.Center">
+  <Markup Content="Tab / Ctrl+Tab to change focus • Enter to select • Type to input • Ctrl+C to exit" Foreground="@Color.Grey58" />
+</Align>
+<Newline />
+
+<Panel Border="BoxBorder.Rounded" Expand="true">
+  <Panel Border="BoxBorder.None" Width="30">
+    <Rows>
+      <TextButton Content="🏠 Home"
+                  BackgroundColor="@(currentView == "Home" ? Color.Green : Color.Default)"
+                  FocusedColor="@Color.Blue"
+                  OnClick="@(() => currentView = "Home")" />
+      <Newline />
+      <TextButton Content="🔢 Counter"
+                  BackgroundColor="@(currentView == "Counter" ? Color.Green : Color.Default)"
+                  FocusedColor="@Color.Blue"
+                  OnClick="@(() => currentView = "Counter")" />
+      <Newline />
+      <TextButton Content="📦 Repos"
+                  BackgroundColor="@(currentView == "Repos" ? Color.Green : Color.Default)"
+                  FocusedColor="@Color.Blue"
+                  OnClick="@(() => currentView = "Repos")" />
+      <Newline />
+      <TextButton Content="⚙️  Settings"
+                  BackgroundColor="@(currentView == "Settings" ? Color.Green : Color.Default)"
+                  FocusedColor="@Color.Blue"
+                  OnClick="@(() => currentView = "Settings")" />
+    </Rows>
+  </Panel>
+  
+  <Panel Title="@currentView" Border="BoxBorder.Rounded" Expand="true">
+    @if (currentView == "Home")
+    {
+      <Markup Content="🏠 [bold green]Welcome to Command Centre[/]" />
+      <Newline />
+      <Markup Content="• View system status" Foreground="@Color.Grey58" />
+      <Newline />
+      <Markup Content="• Quick actions available" Foreground="@Color.Grey58" />
+    }
+    else if (currentView == "Counter")
+    {
+      <Markup Content="🔢 [bold cyan1]Counter Component[/]" />
+      <Newline />
+      <Markup Content="Interactive counter functionality" Foreground="@Color.Grey58" />
+    }
+    else if (currentView == "Repos")
+    {
+      <Markup Content="📦 [bold purple]Repository Manager[/]" />
+      <Newline />
+      <Markup Content="Manage your git repositories" Foreground="@Color.Grey58" />
+    }
+    else if (currentView == "Settings")
+    {
+      <Markup Content="⚙️  [bold yellow]Configuration[/]" />
+      <Newline />
+      <Markup Content="Application settings and preferences" Foreground="@Color.Grey58" />
+    }
+  </Panel>
+</Panel>
+
+@code {
+    private string currentView = "Home";
+}

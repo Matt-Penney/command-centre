@@ -25,3 +25,7 @@ build_property.EnableCodeStyleSeverity =
 [/Users/matthewpenney/repos/command-centre/command-centre/Components/Counter.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Db3VudGVyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/matthewpenney/repos/command-centre/command-centre/Components/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
