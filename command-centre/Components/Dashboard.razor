@@ -5,7 +5,7 @@
 @using Spectre.Console
 @using System.Diagnostics
 
-<Figlet Content="Dashboard" />
+<Figlet Content="Welcome" />
 <Newline />
 <Align Horizontal="HorizontalAlignment.Center">
   <Markup Content="Tab / Ctrl+Tab to change focus • Enter to select • Type to input • Ctrl+C to exit" Foreground="@Color.Grey58" />
@@ -30,6 +30,11 @@
                   BackgroundColor="@(currentView == "Repos" ? Color.Green : Color.Default)"
                   FocusedColor="@Color.Blue"
                   OnClick="@(() => currentView = "Repos")" />
+      <Newline />
+      <TextButton Content="🧰 Utilities"
+                  BackgroundColor="@(currentView == "Utilities" ? Color.Green : Color.Default)"
+                  FocusedColor="@Color.Blue"
+                  OnClick="@(() => currentView = "Utilities")" />
       <Newline />
       <TextButton Content="⚙️  Settings"
                   BackgroundColor="@(currentView == "Settings" ? Color.Green : Color.Default)"
@@ -56,6 +61,12 @@
     else if (currentView == "Repos")
     {
       <Repos />
+    }
+    else if (currentView == "Utilities")
+    {
+      <Markup Content="🛠️  [bold yellow]Utilities[/]" />
+      <Newline />
+      <Markup Content="Various tools and utilities to assist with development tasks" Foreground="@Color.Grey58" />
     }
     else if (currentView == "Settings")
     {

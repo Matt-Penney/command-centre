@@ -5,34 +5,71 @@
 @using Spectre.Console
 @using System.Diagnostics
 
+<Markup Content="📦 [bold purple]Repository Manager[/]" />
+<Newline />
+<TextInput Placeholder="Search repos..." 
+           Value="@searchQuery" 
+           ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
+           OnSubmit="@HandleEnter"
+           FocusedColor="@Color.Blue" />
+<Newline />
+<Newline />
+
 <Rows>
-    <TextButton Content="📁 customer-portal"
-                BackgroundColor="@Color.Grey"
-                FocusedColor="@Color.Blue"
-                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/customer-portal"))" />
-    <Newline />
-    <TextButton Content="📁 devops"
-                BackgroundColor="@Color.Grey"
-                FocusedColor="@Color.Blue"
-                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/devops"))" />
-    <Newline />
-    <TextButton Content="📁 infrastructure"
-                BackgroundColor="@Color.Grey"
-                FocusedColor="@Color.Blue"
-                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/infrastructure"))" />
-    <Newline />
-    <TextButton Content="📁 ignite-portal"
-                BackgroundColor="@Color.Grey"
-                FocusedColor="@Color.Blue"
-                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/ignite-portal"))" />
-    <Newline />
-    <TextButton Content="📁 ignite"
-                BackgroundColor="@Color.Grey"
-                FocusedColor="@Color.Blue"
-                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/ignite"))" />
+    @foreach (var repo in GetFilteredRepos())
+    {
+        <TextButton Content="@($"📁 {repo.Name}")"
+                    BackgroundColor="@Color.Grey"
+                    FocusedColor="@Color.Blue"
+                    OnClick="@(() => OpenInVSCode(repo.Path))" />
+        <Newline />
+    }
 </Rows>
 
+@if (!GetFilteredRepos().Any())
+{
+    <Markup Content="[yellow]No repos match your search[/]" />
+}
+
 @code {
+    private string searchQuery = "";
+    
+    private List<RepoInfo> repos = new()
+    {
+        new RepoInfo { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal" },
+        new RepoInfo { Name = "devops", Path = "/Users/matthewpenney/devops" },
+        new RepoInfo { Name = "infrastructure", Path = "/Users/matthewpenney/repos/infrastructure" },
+        new RepoInfo { Name = "ignite-portal", Path = "/Users/matthewpenney/repos/ignite-portal" },
+        new RepoInfo { Name = "ignite", Path = "/Users/matthewpenney/repos/ignite" }
+    };
+
+    private void UpdateSearch(string value)
+    {
+        searchQuery = value;
+        StateHasChanged();
+    }
+
+    private void HandleEnter()
+    {
+        var filtered = GetFilteredRepos().ToList();
+        
+        // If only one result, open it automatically
+        if (filtered.Count == 1)
+        {
+            OpenInVSCode(filtered[0].Path);
+        }
+    }
+
+    private IEnumerable<RepoInfo> GetFilteredRepos()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+            return repos;
+        
+        var filtered = repos.Where(r => r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        
+        return filtered;
+    }
+
     private void OpenInVSCode(string path)
     {
         try
@@ -53,5 +90,11 @@
         {
             // Handle error
         }
+    }
+
+    private class RepoInfo
+    {
+        public string Name { get; set; } = "";
+        public string Path { get; set; } = "";
     }
 }
