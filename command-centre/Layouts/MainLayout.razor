@@ -1,0 +1,19 @@
+@namespace CommandCentre.Layouts
+@inherits LayoutComponentBase
+
+<Header/>
+<Panel Expand="true">
+    <Grid Columns="2" Expand="true">
+        <Padder Padding="@(new (1, 1, 1, 1))">
+            <SideNavBar @bind-IsFocused="NavBarIsFocused" />
+        </Padder>
+		<Padder Padding="@(new(0,1,0,0))">
+            @Body
+		</Padder>
+    </Grid>
+</Panel>
+@* <Footer SideNavBarIsFocused="SideNavBarIsFocused" /> *@
+
+@code {
+    private bool NavBarIsFocused;
+}

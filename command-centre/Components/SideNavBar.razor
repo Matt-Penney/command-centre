@@ -1,0 +1,58 @@
+@namespace CommandCentre.Components
+
+@using Spectre.Console
+@inject NavigationManager Nav
+
+<Select Options="@(_tabs.Select(t => t.Label).ToArray())"
+    Value="@SelectedTab"
+    ValueChanged="@SelectTab"
+    IsFocused="@IsFocused"
+    IsFocusedChanged="@OnSelectFocusChanged"
+    Expand="false"/>
+
+@code {
+    private string SelectedTab = "home";
+    private readonly (string Key, string Label)[] _tabs = new[]
+    {
+        ("home", "Home"),
+        ("counter", "Counter"),
+        ("repos", "Repos"),
+        ("utilities", "Utilities"),
+        ("settings", "Settings"),
+    };
+
+    private void SelectTab(string tabName)
+    {
+        var key = _tabs.FirstOrDefault(t => t.Label == tabName).Key;
+        if (key == null)
+        {
+            throw new InvalidOperationException($"Tab '{tabName}' not found.");
+        }
+        SelectedTab = tabName;
+        Nav.NavigateTo(key);
+    }
+
+    [Parameter]
+    public bool IsFocused { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsFocusedChanged { get; set; }
+
+    private async Task OnSelectFocusChanged(bool isFocused)
+    {
+        if (IsFocused == isFocused)
+        {
+            return;
+        }
+
+        IsFocused = isFocused;
+
+        if (IsFocusedChanged.HasDelegate)
+        {
+            await IsFocusedChanged.InvokeAsync(isFocused).ConfigureAwait(false);
+        }
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+
+}

@@ -1,0 +1,15 @@
+@namespace CommandCentre.Components
+
+@using CommandCentre.Components
+@using Spectre.Console
+
+<Figlet Content="Welcome" />
+<Align Horizontal="@HorizontalAlignment.Center">
+    <Rows>
+        <Columns>
+            <Markup Content="Repo link: RazorConsole" Foreground="@Color.DeepSkyBlue1" Decoration="Decoration.Underline" link="https://github.com/LittleLittleCloud/RazorConsole" />
+            <Markup Content="README" Foreground="@Color.DeepSkyBlue1" Decoration="Decoration.Underline" link="https://github.com/LittleLittleCloud/RazorConsole/blob/main/README.md" />
+            <Markup Content="Give us a star ⭐😺🔥" Foreground="@Color.LightYellow3" />
+        </Columns>
+    </Rows>
+</Align>

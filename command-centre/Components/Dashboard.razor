@@ -26,11 +26,6 @@
                   FocusedColor="@Color.Blue"
                   OnClick="@(() => currentView = "Counter")" />
       <Newline />
-      <TextButton Content="📦 Repos"
-                  BackgroundColor="@(currentView == "Repos" ? Color.Green : Color.Default)"
-                  FocusedColor="@Color.Blue"
-                  OnClick="@(() => currentView = "Repos")" />
-      <Newline />
       <TextButton Content="🧰 Utilities"
                   BackgroundColor="@(currentView == "Utilities" ? Color.Green : Color.Default)"
                   FocusedColor="@Color.Blue"
@@ -57,10 +52,6 @@
     else if (currentView == "Counter")
     {
       <Counter />
-    }
-    else if (currentView == "Repos")
-    {
-      <Repos />
     }
     else if (currentView == "Utilities")
     {

@@ -1,29 +1,21 @@
-@namespace CommandCentre.Components
+@page "/repos"
 
-@using Microsoft.AspNetCore.Components
-@using RazorConsole.Components
-@using Spectre.Console
-@using System.Diagnostics
-
-<Markup Content="📦 [bold purple]Repository Manager[/]" />
-<Newline />
-<TextInput Placeholder="Search repos..." 
+<Rows>
+    <TextInput Placeholder="Search repos..." 
            Value="@searchQuery" 
            ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
            OnSubmit="@HandleEnter"
            FocusedColor="@Color.Blue" />
-<Newline />
-<Newline />
+    <Newline />
 
-<Rows>
-    @foreach (var repo in GetFilteredRepos())
-    {
-        <TextButton Content="@($"📁 {repo.Name}")"
-                    BackgroundColor="@Color.Grey"
-                    FocusedColor="@Color.Blue"
-                    OnClick="@(() => OpenInVSCode(repo.Path))" />
-        <Newline />
-    }
+    <Select Options="@GetFilteredRepos().Select(r => $"📁 {r.Name}").ToArray()"
+        Value="@SelectedRepo"
+        ValueChanged="@SelectRepo"
+        OnSelected="@HandleEnter"
+        IsFocused="true"
+        Expand="true" />
+
+    <Markup Content="@($"Selected Repo: {SelectedRepo}")" Foreground="@Color.Grey70" />
 </Rows>
 
 @if (!GetFilteredRepos().Any())
@@ -34,7 +26,8 @@
 @code {
     private string searchQuery = "";
     
-    private List<RepoInfo> repos = new()
+    private string SelectedRepo = "";
+    private readonly List<RepoInfo> _repos = new()
     {
         new RepoInfo { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal" },
         new RepoInfo { Name = "devops", Path = "/Users/matthewpenney/devops" },
@@ -42,6 +35,21 @@
         new RepoInfo { Name = "ignite-portal", Path = "/Users/matthewpenney/repos/ignite-portal" },
         new RepoInfo { Name = "ignite", Path = "/Users/matthewpenney/repos/ignite" }
     };
+
+    private void SelectRepo(string repoName)
+    {
+        repoName = repoName.TrimStart("📁 ".ToCharArray());
+
+        var key = _repos.FirstOrDefault(r => r.Name == repoName).Name;
+        if (key == null)
+        {
+            throw new InvalidOperationException($"Tab '{repoName}' not found.");
+        }
+        SelectedRepo = repoName;
+        StateHasChanged();
+
+        OpenInVSCode(_repos.First(r => r.Name == SelectedRepo).Path);
+    }
 
     private void UpdateSearch(string value)
     {
@@ -53,7 +61,11 @@
     {
         var filtered = GetFilteredRepos().ToList();
         
-        // If only one result, open it automatically
+        if (!filtered.Any())
+        {
+            return;
+        }
+
         if (filtered.Count == 1)
         {
             OpenInVSCode(filtered[0].Path);
@@ -63,11 +75,9 @@
     private IEnumerable<RepoInfo> GetFilteredRepos()
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
-            return repos;
+            return _repos;
         
-        var filtered = repos.Where(r => r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
-        
-        return filtered;
+        return _repos.Where(r => r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
     }
 
     private void OpenInVSCode(string path)

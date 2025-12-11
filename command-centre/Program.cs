@@ -1,10 +1,14 @@
-using CommandCentre.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using RazorConsole.Core;
+using CommandCentre.Components;
 
-var builder = Host.CreateDefaultBuilder(args)
-    .UseRazorConsole<Dashboard>();
+var builder = Host
+    .CreateApplicationBuilder(args);
 
-var host = builder.Build();
+builder.UseRazorConsole<App>();
 
-await host.RunAsync();
+await builder
+    .Build()
+    .RunAsync();
