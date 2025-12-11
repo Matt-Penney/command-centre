@@ -1,0 +1,57 @@
+@namespace CommandCentre.Components
+
+@using Microsoft.AspNetCore.Components
+@using RazorConsole.Components
+@using Spectre.Console
+@using System.Diagnostics
+
+<Rows>
+    <TextButton Content="📁 customer-portal"
+                BackgroundColor="@Color.Grey"
+                FocusedColor="@Color.Blue"
+                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/customer-portal"))" />
+    <Newline />
+    <TextButton Content="📁 devops"
+                BackgroundColor="@Color.Grey"
+                FocusedColor="@Color.Blue"
+                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/devops"))" />
+    <Newline />
+    <TextButton Content="📁 infrastructure"
+                BackgroundColor="@Color.Grey"
+                FocusedColor="@Color.Blue"
+                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/infrastructure"))" />
+    <Newline />
+    <TextButton Content="📁 ignite-portal"
+                BackgroundColor="@Color.Grey"
+                FocusedColor="@Color.Blue"
+                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/ignite-portal"))" />
+    <Newline />
+    <TextButton Content="📁 ignite"
+                BackgroundColor="@Color.Grey"
+                FocusedColor="@Color.Blue"
+                OnClick="@(() => OpenInVSCode("/Users/matthewpenney/repos/ignite"))" />
+</Rows>
+
+@code {
+    private void OpenInVSCode(string path)
+    {
+        try
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "code",
+                    Arguments = $"\"{path}\"",
+                    UseShellExecute = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+        }
+    }
+}
