@@ -74,10 +74,15 @@
     @* Time Tracker *@
     <Panel Title="⏱️ Time Tracker" BorderColor="@Color.Magenta">
         <Rows>
-            <Markup Content="@($"Current Task:")" Decoration="Decoration.Bold"  />
-            <Markup Content="@($"{_currentTask}")" />
+            <Columns>
+              <Markup Content="Current Task:" Decoration="Decoration.Bold"  />
+              <Markup Content="@($"{_currentTask}")" Foreground="@Color.Cyan" />
+            </Columns>
             <Newline />
-            <Markup Content="@($"Time: {_elapsedTime}")" Foreground="@Color.Cyan" Decoration="Decoration.Bold" />
+            <Columns>
+              <Markup Content="Time:" Decoration="Decoration.Bold" />
+              <Markup Content="@($"{_elapsedTime}")" Foreground="@Color.Cyan" />
+            </Columns>
             <Newline />
             <Columns>
                 <TextButton Content="Start" OnClick="@StartTimer" />
