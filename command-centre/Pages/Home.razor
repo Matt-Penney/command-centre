@@ -1,9 +1,23 @@
 @page "/"
 @page "/home"
 @using System.Diagnostics
+@using CommandCentre.Models
+@using CommandCentre.Services
+@implements IDisposable
+@inject RepoService RepoService
+@inject NavigationManager Navigation
 
 <Rows>
     <Markup Content="⚡️ Dashboard" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Newline />
+    
+    @* Global Search Bar *@
+    <TextInput Placeholder="🔍 Quick search repos (press Enter)..." 
+           Value="@_searchQuery" 
+           ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+           OnSubmit="@HandleQuickSearch"
+           IsFocused="true"
+           FocusedColor="@Color.Blue" />
     <Newline />
     
     @* System Stats *@
@@ -75,11 +89,13 @@
 </Rows>
 
 @code {
+    private string _searchQuery = "";
     private string _cpuUsage = "0";
     private string _memoryUsage = "0";
     private string _totalMemory = "16";
     private string _uptime = "0h 0m";
     
+    private List<RepoInfo> _repos = new();
     private List<RepoStatus> _repoStatuses = new();
     
     private List<TodoTask> _todaysTasks = new()
@@ -95,9 +111,12 @@
     private System.Timers.Timer? _statsTimer;
     private DateTime _startTime;
     private TimeSpan _elapsed = TimeSpan.Zero;
+    private bool _disposed = false;
     
     protected override async Task OnInitializedAsync()
     {
+        _repos = RepoService.GetAllRepos();
+
         await LoadSystemStats();
         await LoadGitStatuses();
         
@@ -105,53 +124,31 @@
         _statsTimer = new System.Timers.Timer(5000);
         _statsTimer.Elapsed += async (s, e) =>
         {
-            await LoadSystemStats();
+            if (!_disposed) await LoadSystemStats();
         };
         _statsTimer.Start();
     }
     
     public void Dispose()
     {
+        _disposed = true;
+        _timer?.Stop();
         _timer?.Dispose();
+        _statsTimer?.Stop();
         _statsTimer?.Dispose();
     }
     
     private async Task LoadSystemStats()
     {
+        if (_disposed) return;
+        
         try
         {
-            // Get CPU usage (simplified)
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = "-c \"top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            _cpuUsage = (await process.StandardOutput.ReadToEndAsync()).Trim();
-            await process.WaitForExitAsync();
+            // Get CPU usage
+            _cpuUsage = await RunBashCommand("top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
             
             // Get memory usage
-            process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = "-c \"vm_stat | grep 'Pages active' | awk '{print $3}' | sed 's/\\.//'\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            var pages = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
-            
+            var pages = await RunBashCommand("vm_stat | grep 'Pages active' | awk '{print $3}' | sed 's/\\.//'");
             if (int.TryParse(pages.Trim(), out int pageCount))
             {
                 _memoryUsage = ((pageCount * 4096) / (1024 * 1024 * 1024)).ToString("F1");
@@ -161,7 +158,7 @@
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             _uptime = $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m";
             
-            StateHasChanged();
+            if (!_disposed) await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
@@ -169,59 +166,63 @@
         }
     }
     
-    private async Task LoadGitStatuses()
+    private async Task<string> RunBashCommand(string command)
     {
-        var repos = new[]
+        using var process = new Process
         {
-            new { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal" },
-            new { Name = "devops", Path = "/Users/matthewpenney/devops" },
-            new { Name = "infrastructure", Path = "/Users/matthewpenney/repos/infrastructure" }
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{command}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            }
         };
-        
-        foreach (var repo in repos)
-        {
-            try
-            {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/bash",
-                        Arguments = $"-c \"cd '{repo.Path}' && git status --porcelain\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    }
-                };
-                process.Start();
-                var output = await process.StandardOutput.ReadToEndAsync();
-                await process.WaitForExitAsync();
-                
-                var hasChanges = !string.IsNullOrWhiteSpace(output);
-                _repoStatuses.Add(new RepoStatus
-                {
-                    Name = repo.Name,
-                    HasChanges = hasChanges,
-                    ChangeCount = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length
-                });
-            }
-            catch
-            {
-                _repoStatuses.Add(new RepoStatus { Name = repo.Name, HasChanges = false });
-            }
-        }
-        
-        StateHasChanged();
+        process.Start();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        return output.Trim();
     }
     
-    private string GetGitStatusMarkup(RepoStatus status)
+    private async Task LoadGitStatuses()
     {
-        if (status.HasChanges)
+        if (_disposed) return;
+        
+        _repoStatuses.Clear();
+        
+        foreach (var repo in _repos)
         {
-            return $"🚨";
+            if (_disposed) return;
+            
+            try
+            {
+                _repoStatuses.Add(await GetRepoStatus(repo));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking git status for {repo.Name}: {ex.Message}");
+                _repoStatuses.Add(new RepoStatus { Name = repo.Name, HasChanges = false, ChangeCount = 0 });
+            }
         }
-        return "✅";
+        
+        if (!_disposed) await InvokeAsync(StateHasChanged);
     }
+    
+    private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
+    {
+        var output = await RunBashCommand($"cd '{repo.Path}' 2>/dev/null && git status --porcelain 2>/dev/null || echo ''");
+        var hasChanges = !string.IsNullOrWhiteSpace(output);
+        
+        return new RepoStatus
+        {
+            Name = repo.Name,
+            HasChanges = hasChanges,
+            ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0
+        };
+    }
+    
+    private string GetGitStatusMarkup(RepoStatus status) => status.HasChanges ? "🚨" : "✅";
     
     private void StartTimer()
     {
@@ -229,9 +230,12 @@
         _timer = new System.Timers.Timer(1000);
         _timer.Elapsed += (s, e) =>
         {
-            _elapsed = DateTime.Now - _startTime;
-            _elapsedTime = _elapsed.ToString(@"hh\:mm\:ss");
-            InvokeAsync(StateHasChanged);
+            if (!_disposed)
+            {
+                _elapsed = DateTime.Now - _startTime;
+                _elapsedTime = _elapsed.ToString(@"hh\:mm\:ss");
+                InvokeAsync(StateHasChanged);
+            }
         };
         _timer.Start();
         _currentTask = "Working...";
@@ -251,6 +255,25 @@
         _elapsed = TimeSpan.Zero;
         _elapsedTime = "00:00:00";
         _currentTask = "No task running";
+        StateHasChanged();
+    }
+    
+    private void HandleQuickSearch()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery)) return;
+
+        var matches = _repos.Where(r => r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+        
+        if (matches.Count == 1)
+        {
+            RepoService.OpenRepo(matches[0]);
+            _searchQuery = "";
+        }
+        else if (matches.Any())
+        {
+            Navigation.NavigateTo("/repos");
+        }
+        
         StateHasChanged();
     }
     

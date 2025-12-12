@@ -3,11 +3,14 @@ using Microsoft.Extensions.Hosting;
 
 using RazorConsole.Core;
 using CommandCentre.Components;
+using CommandCentre.Services;
 
 var builder = Host
     .CreateApplicationBuilder(args);
 
 builder.UseRazorConsole<App>();
+
+builder.Services.AddSingleton<RepoService>();
 
 await builder
     .Build()

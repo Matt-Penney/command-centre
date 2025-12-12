@@ -1,6 +1,13 @@
 @page "/repos"
+@using System.Diagnostics
+@using CommandCentre.Models
+@using CommandCentre.Services
+@inject RepoService RepoService
 
 <Rows>
+    <Markup Content="📁 Repositories" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Newline />
+
     <TextInput Placeholder="Search repos..." 
            Value="@searchQuery" 
            ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
@@ -25,31 +32,27 @@
 
 @code {
     private string searchQuery = "";
-    
     private string SelectedRepo = "";
-    private readonly List<RepoInfo> _repos = new()
+    private List<RepoInfo> _repos = new();
+
+    protected override void OnInitialized()
     {
-        new RepoInfo { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal", Type = "wsl" },
-        new RepoInfo { Name = "devops", Path = "/Users/matthewpenney/devops" },
-        new RepoInfo { Name = "infrastructure", Path = "/Users/matthewpenney/repos/infrastructure" },
-        new RepoInfo { Name = "ignite-portal", Path = "/Users/matthewpenney/repos/ignite-portal" },
-        new RepoInfo { Name = "ignite", Path = "/Users/matthewpenney/repos/ignite" },
-        new RepoInfo { Name = "portfolio", Path = "/Users/matthewpenney/repos/portfolio" }
-    };
+        _repos = RepoService.GetAllRepos();
+    }
 
     private void SelectRepo(string repoName)
     {
         repoName = repoName.TrimStart("📁 ".ToCharArray());
 
-        var key = _repos.FirstOrDefault(r => r.Name == repoName).Name;
-        if (key == null)
+        var repo = _repos.FirstOrDefault(r => r.Name == repoName);
+        if (repo == null)
         {
-            throw new InvalidOperationException($"Tab '{repoName}' not found.");
+            throw new InvalidOperationException($"Repo '{repoName}' not found.");
         }
         SelectedRepo = repoName;
         StateHasChanged();
 
-        OpenInVSCode(_repos.First(r => r.Name == SelectedRepo).Path);
+        RepoService.OpenRepo(repo);
     }
 
     private void UpdateSearch(string value)
@@ -79,64 +82,5 @@
             return _repos;
         
         return _repos.Where(r => r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private void OpenInVSCode(string path)
-    {
-        try
-        {
-            var repo = _repos.First(r => r.Path == path);
-            string command;
-
-            if (repo.Type == "wsl")
-            {
-                // For WSL repos, use ubuntu command to open in VS Code
-                command = $"ubuntu run code '{path}'";
-            }
-            else
-            {
-                // For regular repos, use macOS 'open' command with VS Code
-                command = $"open -a 'Visual Studio Code' '{path}'";
-            }
-
-            Console.WriteLine($"Running command: {command}");
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "/bin/bash",
-                    Arguments = $"-c \"{command}\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-            
-            process.WaitForExit();
-            
-            if (!string.IsNullOrEmpty(output))
-                Console.WriteLine($"Output: {output}");
-            if (!string.IsNullOrEmpty(error))
-                Console.WriteLine($"Error: {error}");
-                
-            Console.WriteLine($"Exit code: {process.ExitCode}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error opening VS Code: {ex.Message}");
-        }
-    }
-
-    private class RepoInfo
-    {
-        public string Name { get; set; } = "";
-        public string Path { get; set; } = "";
-        public string Type { get; set; } = "code";
     }
 }

@@ -1,0 +1,37 @@
+[
+  {
+    "Name": "customer-portal",
+    "Path": "/Users/matthewpenney/repos/customer-portal",
+    "Type": "wsl"
+  },
+  {
+    "Name": "devops",
+    "Path": "/Users/matthewpenney/devops",
+    "Type": "code"
+  },
+  {
+    "Name": "infrastructure",
+    "Path": "/Users/matthewpenney/repos/infrastructure",
+    "Type": "code"
+  },
+  {
+    "Name": "ignite-portal",
+    "Path": "/Users/matthewpenney/repos/ignite-portal",
+    "Type": "code"
+  },
+  {
+    "Name": "ignite",
+    "Path": "/Users/matthewpenney/repos/ignite",
+    "Type": "code"
+  },
+  {
+    "Name": "portfolio",
+    "Path": "/Users/matthewpenney/repos/portfolio",
+    "Type": "code"
+  },
+  {
+    "Name": "command-centre",
+    "Path": "/Users/matthewpenney/repos/command-centre",
+    "Type": "code"
+  }
+]
