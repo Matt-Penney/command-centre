@@ -27,7 +27,7 @@
 
 @if (!GetFilteredRepos().Any())
 {
-    <Markup Content="[yellow]No repos match your search[/]" />
+    <Markup Content="No repos match your search" Foreground="@Color.Red" />
 }
 
 @code {

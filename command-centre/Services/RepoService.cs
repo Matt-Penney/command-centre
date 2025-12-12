@@ -11,11 +11,9 @@ public class RepoService
     
     public RepoService()
     {
-        _configPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".command-centre",
-            "repos.json"
-        );
+        var projectDirectory = Directory.GetCurrentDirectory();
+        _configPath = Path.Combine(projectDirectory, "repos.json");
+
         _repos = LoadRepos();
     }
     

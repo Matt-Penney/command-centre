@@ -1,0 +1,154 @@
+@page "/utilities"
+@using System.Diagnostics
+@using CommandCentre.Models
+@using CommandCentre.Services
+@inject UtilityService UtilityService
+
+<Rows>
+    <Markup Content="🛠️ Utilities" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Newline />
+
+    <TextInput Placeholder="Search utilities..." 
+            Value="@_searchQuery" 
+            ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+            IsFocused="true"
+            FocusedColor="@Color.Blue" />
+    <Newline />
+
+    @if (!GetFilteredUtilities().Any())
+    {
+        <Markup Content="No utilities match your search" Foreground="@Color.Red" />
+    }
+    else
+    {
+        <Select Options="@GetFilteredUtilities().Select(u => $"🛠️ {u.Name}").ToArray()"
+                Value="@_selectedUtility"
+                ValueChanged="@SelectUtility"
+                OnSelected="@ExecuteSelected"
+                IsFocused="true"
+                Expand="true" />
+    }
+    
+    <Newline />
+
+    @if (!string.IsNullOrEmpty(_selectedUtility))
+    {
+        var utility = _utilities.FirstOrDefault(u => u.Name == _selectedUtility);
+        if (utility != null)
+        {
+            <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
+                <Rows>
+                    <Markup Content="@utility.Description" Foreground="@Color.Grey" />
+                    <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
+                    <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
+                    @if (utility.RequiresConfirmation)
+                    {
+                        <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
+                    }
+                </Rows>
+            </Panel>
+            <Newline />
+            
+            <Columns>
+                <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
+                <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
+            </Columns>
+            <Newline />
+        }
+    }
+
+    @if (_isExecuting)
+    {
+        <Spinner />
+        <Markup Content="Executing..." Foreground="@Color.Yellow" />
+        <Newline />
+    }
+
+    @if (!string.IsNullOrEmpty(_output))
+    {
+        <Panel Title="📋 Output" BorderColor="@Color.Green">
+            <Markup Content="@_output" />
+        </Panel>
+        <Newline />
+    }
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <Panel Title="❌ Error" BorderColor="@Color.Red">
+            <Markup Content="@_error" Foreground="@Color.Red" />
+        </Panel>
+        <Newline />
+    }
+    
+    <Markup Content="@($"Selected Utility: {_selectedUtility}")" Foreground="@Color.Grey70" />
+    <Markup Content="@($"Total utilities loaded: {_utilities.Count}")" Foreground="@Color.Grey" />
+</Rows>
+
+@code {
+    private string _searchQuery = "";
+    private string _selectedUtility = "";
+    private List<UtilityScript> _utilities = new();
+    private bool _isExecuting = false;
+    private string _output = "";
+    private string _error = "";
+
+    protected override void OnInitialized()
+    {
+        _utilities = UtilityService.GetAllUtilities();
+    }
+
+    private void SelectUtility(string utilityName)
+    {
+        utilityName = utilityName.TrimStart("🛠️ ".ToCharArray());
+
+        _selectedUtility = utilityName;
+        _output = "";
+        _error = "";
+        StateHasChanged();
+    }
+
+    private async Task ExecuteSelected()
+    {
+        if (string.IsNullOrEmpty(_selectedUtility)) return;
+        
+        var utility = _utilities.FirstOrDefault(u => u.Name == _selectedUtility);
+        if (utility != null)
+        {
+            await ExecuteUtility(utility);
+        }
+    }
+
+    private async Task ExecuteUtility(UtilityScript utility)
+    {
+        _output = "";
+        _error = "";
+        _isExecuting = true;
+        StateHasChanged();
+
+        var (success, output, error) = await UtilityService.ExecuteUtility(utility);
+
+        _isExecuting = false;
+        _output = output;
+        _error = error;
+        StateHasChanged();
+    }
+
+    private void ClearSelection()
+    {
+        _selectedUtility = "";
+        _output = "";
+        _error = "";
+        StateHasChanged();
+    }
+
+    private IEnumerable<UtilityScript> GetFilteredUtilities()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            return _utilities;
+        
+        return _utilities.Where(u => 
+            u.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+            u.Description.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+}

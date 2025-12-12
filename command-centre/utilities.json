@@ -1,0 +1,44 @@
+[
+  {
+    "Name": "Clear Docker",
+    "Description": "Remove all stopped containers and unused images",
+    "Command": "docker system prune -af",
+    "Type": "bash",
+    "RequiresConfirmation": true
+  },
+  {
+    "Name": "Update Brew",
+    "Description": "Update Homebrew and upgrade all packages",
+    "Command": "brew update && brew upgrade",
+    "Type": "bash",
+    "RequiresConfirmation": false
+  },
+  {
+    "Name": "Git Clean Branches",
+    "Description": "Delete all local branches that have been merged",
+    "Command": "git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d",
+    "Type": "bash",
+    "RequiresConfirmation": true
+  },
+  {
+    "Name": "Check Disk Space",
+    "Description": "Show disk usage by directory",
+    "Command": "du -sh * | sort -h",
+    "Type": "bash",
+    "RequiresConfirmation": false
+  },
+  {
+    "Name": "Enable ZScaler",
+    "Description": "Enable ZScaler network filtering",
+    "Command": "",
+    "Type": "bash",
+    "RequiresConfirmation": true
+  },
+  {
+    "Name": "Disable ZScaler",
+    "Description": "Disable ZScaler network filtering",
+    "Command": "",
+    "Type": "bash",
+    "RequiresConfirmation": true
+  }
+]

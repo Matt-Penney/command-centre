@@ -11,6 +11,7 @@ var builder = Host
 builder.UseRazorConsole<App>();
 
 builder.Services.AddSingleton<RepoService>();
+builder.Services.AddSingleton<UtilityService>();
 
 await builder
     .Build()
