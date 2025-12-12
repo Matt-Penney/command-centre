@@ -189,6 +189,8 @@
         _statsTimer.Elapsed += async (s, e) =>
         {
             if (!_disposed) await LoadSystemStats();
+            if (!_disposed) await LoadGitStatuses();
+            if (!_disposed && _isGitHubAuthenticated) await LoadPullRequests();
         };
         _statsTimer.Start();
     }
