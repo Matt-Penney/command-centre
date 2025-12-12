@@ -6,6 +6,7 @@
 @implements IDisposable
 @inject RepoService RepoService
 @inject NavigationManager Navigation
+@inject GitHubService GitHubService
 
 <Rows>
     <Markup Content="⚡️ Dashboard" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
@@ -49,6 +50,43 @@
                 <Markup Content="@($"{repo.Name}:")" Foreground="@Color.Grey" />
                 <Markup Content="@GetGitStatusMarkup(_repoStatuses[repo.Name])" />
               </Columns>
+            }
+        </Rows>
+    </Panel>
+    
+    <Newline />
+    
+    <Panel Title="🔀 My Open Pull Requests" BorderColor="@Color.Magenta">
+        <Rows>
+            @if (!_isGitHubAuthenticated)
+            {
+                <Markup Content="⚠️  GitHub CLI not authenticated" Foreground="@Color.Yellow" />
+                <Markup Content="Run: gh auth login" Foreground="@Color.Grey" />
+            }
+            else if (_pullRequests.Any())
+            {
+                foreach (var pr in _pullRequests)
+                {
+                    var statusEmoji = pr.BuildStatus switch
+                    {
+                        "success" => "✅",
+                        "failure" => "❌",
+                        "pending" => "⏳",
+                        _ => "❓"
+                    };
+                    
+                    <Markup Content="@($"{statusEmoji} #{pr.Number} - {pr.Title}")" Foreground="@Color.White" />
+                    <Markup Content="@($"    {pr.Repo} • {pr.CreatedAt:MMM dd}")" Foreground="@Color.Grey70" />
+                }
+            }
+            else if (_loadingPRs)
+            {
+                <Spinner />
+                <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
+            }
+            else
+            {
+                <Markup Content="No open pull requests" Foreground="@Color.Grey" />
             }
         </Rows>
     </Panel>
@@ -118,6 +156,10 @@
     private TimeSpan _elapsed = TimeSpan.Zero;
     private bool _disposed = false;
     
+    private List<PullRequest> _pullRequests = new();
+    private bool _loadingPRs = false;
+    private bool _isGitHubAuthenticated = false;
+
     protected override async Task OnInitializedAsync()
     {
         _repos = RepoService.GetAllRepos();
@@ -132,9 +174,15 @@
                 IsLoading = true 
             };
         }
-
+        
         await LoadSystemStats();
         await LoadGitStatuses();
+        
+        _isGitHubAuthenticated = await GitHubService.IsAuthenticated();
+        if (_isGitHubAuthenticated)
+        {
+            await LoadPullRequests();
+        }
         
         // Start live updates for system stats every 5 seconds
         _statsTimer = new System.Timers.Timer(5000);
@@ -323,6 +371,35 @@
         }
         
         StateHasChanged();
+    }
+
+    private async Task LoadPullRequests()
+    {
+        if (!_isGitHubAuthenticated) return;
+        
+        _loadingPRs = true;
+        await InvokeAsync(StateHasChanged);
+        
+        try
+        {
+            Console.WriteLine("Loading pull requests...");
+            _pullRequests = await GitHubService.GetMyOpenPullRequests();
+            Console.WriteLine($"Loaded {_pullRequests.Count} pull requests");
+            
+            foreach (var pr in _pullRequests)
+            {
+                Console.WriteLine($"PR: {pr.Title} - {pr.BuildStatus}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading pull requests: {ex.Message}");
+        }
+        finally
+        {
+            _loadingPRs = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
     
     private class RepoStatus

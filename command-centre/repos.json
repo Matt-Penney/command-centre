@@ -33,5 +33,10 @@
     "Name": "command-centre",
     "Path": "/Users/matthewpenney/repos/command-centre",
     "Type": "code"
+  },
+  {
+    "Name": "wintrix",
+    "Path": "c://repos/wintrix",
+    "Type": "studio"
   }
 ]

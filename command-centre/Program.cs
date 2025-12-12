@@ -12,6 +12,7 @@ builder.UseRazorConsole<App>();
 
 builder.Services.AddSingleton<RepoService>();
 builder.Services.AddSingleton<UtilityService>();
+builder.Services.AddSingleton<GitHubService>();
 
 await builder
     .Build()
