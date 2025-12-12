@@ -43,11 +43,11 @@
     @* Git Status Indicator *@
     <Panel Title="🔀 Git Status" BorderColor="@Color.Green">
         <Rows>
-            @foreach (var repo in _repoStatuses)
+            @foreach (var repo in _repos)
             {
               <Columns>
                 <Markup Content="@($"{repo.Name}:")" Foreground="@Color.Grey" />
-                <Markup Content="@GetGitStatusMarkup(repo)" />
+                <Markup Content="@GetGitStatusMarkup(_repoStatuses[repo.Name])" />
               </Columns>
             }
         </Rows>
@@ -96,7 +96,7 @@
     private string _uptime = "0h 0m";
     
     private List<RepoInfo> _repos = new();
-    private List<RepoStatus> _repoStatuses = new();
+    private Dictionary<string, RepoStatus> _repoStatuses = new();
     
     private List<TodoTask> _todaysTasks = new()
     {
@@ -116,6 +116,17 @@
     protected override async Task OnInitializedAsync()
     {
         _repos = RepoService.GetAllRepos();
+
+        foreach (var repo in _repos)
+        {
+            _repoStatuses[repo.Name] = new RepoStatus 
+            { 
+                Name = repo.Name, 
+                HasChanges = false, 
+                ChangeCount = 0,
+                IsLoading = true 
+            };
+        }
 
         await LoadSystemStats();
         await LoadGitStatuses();
@@ -188,25 +199,52 @@
     private async Task LoadGitStatuses()
     {
         if (_disposed) return;
-        
-        _repoStatuses.Clear();
-        
+
         foreach (var repo in _repos)
         {
             if (_disposed) return;
             
-            try
-            {
-                _repoStatuses.Add(await GetRepoStatus(repo));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error checking git status for {repo.Name}: {ex.Message}");
-                _repoStatuses.Add(new RepoStatus { Name = repo.Name, HasChanges = false, ChangeCount = 0 });
-            }
+            await LoadSingleRepoStatus(repo);
+            await InvokeAsync(StateHasChanged);
+            
+            await Task.Delay(1000);
         }
+    }
+    
+    private async Task<RepoStatus> LoadSingleRepoStatus(RepoInfo repo)
+    {
+        if (_disposed) return new RepoStatus { Name = repo.Name, HasChanges = false, ChangeCount = 0, IsLoading = false };
         
-        if (!_disposed) await InvokeAsync(StateHasChanged);
+        try
+        {
+            var status = await GetRepoStatus(repo);
+            
+            if (!_disposed)
+            {
+                _repoStatuses[repo.Name] = status;
+            }
+            
+            return status;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking git status for {repo.Name}: {ex.Message}");
+            
+            var errorStatus = new RepoStatus 
+            { 
+                Name = repo.Name, 
+                HasChanges = false, 
+                ChangeCount = 0,
+                IsLoading = false 
+            };
+            
+            if (!_disposed)
+            {
+                _repoStatuses[repo.Name] = errorStatus;
+            }
+            
+            return errorStatus;
+        }
     }
     
     private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
@@ -218,11 +256,16 @@
         {
             Name = repo.Name,
             HasChanges = hasChanges,
-            ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0
+            ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0,
+            IsLoading = false
         };
     }
     
-    private string GetGitStatusMarkup(RepoStatus status) => status.HasChanges ? "🚨" : "✅";
+    private string GetGitStatusMarkup(RepoStatus status)
+    {
+        if (status.IsLoading) return "⏳";
+        return status.HasChanges ? "🚨" : "✅";
+    }
     
     private void StartTimer()
     {
@@ -282,6 +325,7 @@
         public string Name { get; set; } = "";
         public bool HasChanges { get; set; }
         public int ChangeCount { get; set; }
+        public bool IsLoading { get; set; } = false;
     }
     
     private class TodoTask
