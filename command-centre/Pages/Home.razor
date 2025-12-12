@@ -1,7 +1,269 @@
 @page "/"
 @page "/home"
+@using System.Diagnostics
 
-@* system stats *@
-@* git status indicator here maybe? *@
-@* todays tasks *@
-@* time tracker *@
+<Rows>
+    <Markup Content="⚡️ Dashboard" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Newline />
+    
+    @* System Stats *@
+    <Panel Title="💻 System Stats" BorderColor="@Color.Blue">
+        <Rows>
+            <Columns>
+              <Markup Content="CPU:" Foreground="@Color.Grey" />
+              <Markup Content="@($"{_cpuUsage}%")" Foreground="@Color.Green" />
+            </Columns>
+            <Columns>
+                    <Markup Content="Memory:" Foreground="@Color.Grey" />
+                    <Markup Content="@($"{_memoryUsage}GB / {_totalMemory}GB")" Foreground="@Color.Yellow"/>
+            </Columns>
+            <Columns>
+                    <Markup Content="Uptime:" Foreground="@Color.Grey" />
+                    <Markup Content="@($"{_uptime}")" Foreground="@Color.Cyan" />
+            </Columns>
+        </Rows>
+    </Panel>
+    
+    <Newline />
+    
+    @* Git Status Indicator *@
+    <Panel Title="🔀 Git Status" BorderColor="@Color.Green">
+        <Rows>
+            @foreach (var repo in _repoStatuses)
+            {
+              <Columns>
+                <Markup Content="@($"{repo.Name}:")" Foreground="@Color.Grey" />
+                <Markup Content="@GetGitStatusMarkup(repo)" />
+              </Columns>
+            }
+        </Rows>
+    </Panel>
+    
+    <Newline />
+    
+    @* Today's Tasks *@
+    <Panel Title="✅ Today's Tasks" BorderColor="@Color.Yellow">
+        <Rows>
+            @foreach (var task in _todaysTasks)
+            {
+                <Markup Content="@($"{(task.Completed ? "✅" : "❌")} {task.Name}")" />
+            }
+            @if (!_todaysTasks.Any())
+            {
+                <Markup Content="No tasks for today" Foreground="@Color.Grey" />
+            }
+        </Rows>
+    </Panel>
+    
+    <Newline />
+    
+    @* Time Tracker *@
+    <Panel Title="⏱️ Time Tracker" BorderColor="@Color.Magenta">
+        <Rows>
+            <Markup Content="@($"Current Task:")" Decoration="Decoration.Bold"  />
+            <Markup Content="@($"{_currentTask}")" />
+            <Newline />
+            <Markup Content="@($"Time: {_elapsedTime}")" Foreground="@Color.Cyan" Decoration="Decoration.Bold" />
+            <Newline />
+            <Columns>
+                <TextButton Content="Start" OnClick="@StartTimer" />
+                <TextButton Content="Stop" OnClick="@StopTimer" />
+                <TextButton Content="Reset" OnClick="@ResetTimer" />
+            </Columns>
+        </Rows>
+    </Panel>
+</Rows>
+
+@code {
+    private string _cpuUsage = "0";
+    private string _memoryUsage = "0";
+    private string _totalMemory = "16";
+    private string _uptime = "0h 0m";
+    
+    private List<RepoStatus> _repoStatuses = new();
+    
+    private List<TodoTask> _todaysTasks = new()
+    {
+        new TodoTask { Name = "Review PRs", Completed = false },
+        new TodoTask { Name = "Update documentation", Completed = true },
+        new TodoTask { Name = "Deploy to staging", Completed = false }
+    };
+    
+    private string _currentTask = "No task running";
+    private string _elapsedTime = "00:00:00";
+    private System.Timers.Timer? _timer;
+    private System.Timers.Timer? _statsTimer;
+    private DateTime _startTime;
+    private TimeSpan _elapsed = TimeSpan.Zero;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSystemStats();
+        await LoadGitStatuses();
+        
+        // Start live updates for system stats every 5 seconds
+        _statsTimer = new System.Timers.Timer(5000);
+        _statsTimer.Elapsed += async (s, e) =>
+        {
+            await LoadSystemStats();
+        };
+        _statsTimer.Start();
+    }
+    
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _statsTimer?.Dispose();
+    }
+    
+    private async Task LoadSystemStats()
+    {
+        try
+        {
+            // Get CPU usage (simplified)
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = "-c \"top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            _cpuUsage = (await process.StandardOutput.ReadToEndAsync()).Trim();
+            await process.WaitForExitAsync();
+            
+            // Get memory usage
+            process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = "-c \"vm_stat | grep 'Pages active' | awk '{print $3}' | sed 's/\\.//'\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            var pages = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            
+            if (int.TryParse(pages.Trim(), out int pageCount))
+            {
+                _memoryUsage = ((pageCount * 4096) / (1024 * 1024 * 1024)).ToString("F1");
+            }
+            
+            // Get uptime
+            var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+            _uptime = $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m";
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading system stats: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadGitStatuses()
+    {
+        var repos = new[]
+        {
+            new { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal" },
+            new { Name = "devops", Path = "/Users/matthewpenney/devops" },
+            new { Name = "infrastructure", Path = "/Users/matthewpenney/repos/infrastructure" }
+        };
+        
+        foreach (var repo in repos)
+        {
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "/bin/bash",
+                        Arguments = $"-c \"cd '{repo.Path}' && git status --porcelain\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                var output = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                
+                var hasChanges = !string.IsNullOrWhiteSpace(output);
+                _repoStatuses.Add(new RepoStatus
+                {
+                    Name = repo.Name,
+                    HasChanges = hasChanges,
+                    ChangeCount = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length
+                });
+            }
+            catch
+            {
+                _repoStatuses.Add(new RepoStatus { Name = repo.Name, HasChanges = false });
+            }
+        }
+        
+        StateHasChanged();
+    }
+    
+    private string GetGitStatusMarkup(RepoStatus status)
+    {
+        if (status.HasChanges)
+        {
+            return $"🚨";
+        }
+        return "✅";
+    }
+    
+    private void StartTimer()
+    {
+        _startTime = DateTime.Now;
+        _timer = new System.Timers.Timer(1000);
+        _timer.Elapsed += (s, e) =>
+        {
+            _elapsed = DateTime.Now - _startTime;
+            _elapsedTime = _elapsed.ToString(@"hh\:mm\:ss");
+            InvokeAsync(StateHasChanged);
+        };
+        _timer.Start();
+        _currentTask = "Working...";
+        StateHasChanged();
+    }
+    
+    private void StopTimer()
+    {
+        _timer?.Stop();
+        _currentTask = "Paused";
+        StateHasChanged();
+    }
+    
+    private void ResetTimer()
+    {
+        _timer?.Stop();
+        _elapsed = TimeSpan.Zero;
+        _elapsedTime = "00:00:00";
+        _currentTask = "No task running";
+        StateHasChanged();
+    }
+    
+    private class RepoStatus
+    {
+        public string Name { get; set; } = "";
+        public bool HasChanges { get; set; }
+        public int ChangeCount { get; set; }
+    }
+    
+    private class TodoTask
+    {
+        public string Name { get; set; } = "";
+        public bool Completed { get; set; }
+    }
+}
