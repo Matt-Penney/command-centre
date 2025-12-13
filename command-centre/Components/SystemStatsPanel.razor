@@ -13,6 +13,10 @@
             <Markup Content="@($"{_memoryUsage}GB / {_totalMemory}GB")" Foreground="@Color.Yellow"/>
         </Columns>
         <Columns>
+            <Markup Content="Temporature:" Foreground="@Color.Grey" />
+            <Markup Content="@($"{_temperature}°C")" Foreground="@Color.Chartreuse1" />
+        </Columns>
+        <Columns>
             <Markup Content="Uptime:" Foreground="@Color.Grey" />
             <Markup Content="@($"{_uptime}")" Foreground="@Color.Cyan" />
         </Columns>
@@ -23,6 +27,7 @@
     private string _cpuUsage = "0";
     private string _memoryUsage = "0";
     private string _totalMemory = "16";
+    private string _temperature = "0";
     private string _uptime = "0h 0m";
     private System.Timers.Timer? _statsTimer;
     private bool _disposed = false;
@@ -55,6 +60,10 @@
             {
                 _memoryUsage = ((pageCount * 4096) / (1024 * 1024 * 1024)).ToString("F1");
             }
+
+            // Get temperature
+            @* _temperature = await RunBashCommand("osx-cpu-temp | awk '{print $1}' | sed 's/°C//'"); *@
+            _temperature = "N/A"; // Placeholder as osx-cpu-temp is not be installed
             
             // Get uptime
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
