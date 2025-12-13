@@ -44,7 +44,6 @@
                 <Newline />
             }
             
-            @* Always show repo load statuses *@
             @if (_loadStatuses.Any())
             {
                 <TextButton Content="@(_showDetails ? "▼ Hide Load Details" : "▶ Show Load Details")" 
@@ -93,7 +92,6 @@
         
         try
         {
-            // This will use cached data if available
             (_pullRequests, _loadStatuses) = await GitHubService.GetMyOpenPullRequests();
         }
         catch (Exception ex)
