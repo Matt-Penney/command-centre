@@ -76,7 +76,7 @@
     protected override async Task OnInitializedAsync()
     {
         // _isGitHubAuthenticated = await GitHubService.IsAuthenticated();
-        isGitHubAuthenticated = true; // temp fix for rendering issue
+        _isGitHubAuthenticated = true; // temp fix for rendering issue
 
         if (_isGitHubAuthenticated)
         {

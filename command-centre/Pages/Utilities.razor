@@ -153,6 +153,6 @@
 
     private UtilityScript GetSelectedUtility()
     {
-        return _utilities.FirstOrDefault(u => u.Name == _selectedUtility);
+        return _utilities.First(u => u.Name == _selectedUtility);
     }
 }

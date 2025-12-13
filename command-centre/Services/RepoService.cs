@@ -108,7 +108,7 @@ public class RepoService
             }
             return true;
         }
-        catch (Exception ex)
+        catch
         {
             // Console.WriteLine($"Error opening repo: {ex.Message}");
             return false;
