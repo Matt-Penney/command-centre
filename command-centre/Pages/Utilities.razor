@@ -8,32 +8,30 @@
     <Markup Content="🛠️ Utilities" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
     <Newline />
 
-    <TextInput Placeholder="Search utilities..." 
+    <TextInput Placeholder="Search Utilities..." 
                Value="@_searchQuery" 
                ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
                IsFocused="true"
                FocusedColor="@Color.Blue" />
     <Newline />
 
+    <Select Options="@GetFilteredUtilities().Select(u => $"🛠️ {u.Name}").ToArray()"
+            Value="@_selectedUtility"
+            ValueChanged="@SelectUtility"
+            OnSelected="@ExecuteSelected"
+            IsFocused="true"
+            Expand="true" />
+
     @if (!GetFilteredUtilities().Any())
     {
         <Markup Content="No utilities match your search" Foreground="@Color.Red" />
-    }
-    else
-    {
-        <Select Options="@GetFilteredUtilities().Select(u => $"🛠️  {u.Name}").ToArray()"
-                Value="@_selectedUtility"
-                ValueChanged="@SelectUtility"
-                OnSelected="@ExecuteSelected"
-                IsFocused="true"
-                Expand="true" />
     }
     
     <Newline />
 
     @if (!string.IsNullOrEmpty(_selectedUtility))
     {
-        var utility = _utilities.FirstOrDefault(u => u.Name == _selectedUtility);
+        var utility = GetSelectedUtility();
         if (utility != null)
         {
             <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
@@ -80,9 +78,10 @@
         <Newline />
     }
     
-    <Markup Content="@($"Selected Utility: {_selectedUtility}")" Foreground="@Color.Grey70" />
-    <Markup Content="@($"Total utilities loaded: {_utilities.Count}")" Foreground="@Color.Grey" />
 </Rows>
+
+<Markup Content="@($"Selected Utility: {_selectedUtility}")" Foreground="@Color.Grey70" />
+<Markup Content="@($"Total utilities loaded: {_utilities.Count}")" Foreground="@Color.Grey70" />
 
 @code {
     private string _searchQuery = "";
@@ -150,5 +149,10 @@
             u.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
             u.Description.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
         );
+    }
+
+    private UtilityScript GetSelectedUtility()
+    {
+        return _utilities.FirstOrDefault(u => u.Name == _selectedUtility);
     }
 }

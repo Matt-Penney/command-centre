@@ -40,5 +40,12 @@
     "Command": "",
     "Type": "bash",
     "RequiresConfirmation": true
+  },
+  {
+    "Name": "Print Hello World",
+    "Description": "A simple script that prints Hello World",
+    "Command": "echo 'Hello World'",
+    "Type": "bash",
+    "RequiresConfirmation": false
   }
 ]

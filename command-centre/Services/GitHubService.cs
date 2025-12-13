@@ -69,7 +69,7 @@ public class GitHubService
                                   fullOutput.Contains("✓") ||
                                   authProcess.ExitCode == 0;
             
-            Console.WriteLine($"GitHub authenticated: {isAuthenticated}");
+            // Console.WriteLine($"GitHub authenticated: {isAuthenticated}");
             return isAuthenticated;
         }
         catch (Exception ex)
@@ -82,6 +82,9 @@ public class GitHubService
 
     public async Task<(List<PullRequest> prs, List<PRLoadStatus> statuses)> GetMyOpenPullRequests()
     {
+        allPRs.Clear();
+        statuses.Clear();
+
         var repos = _repoService.GetAllRepos();
 
         foreach (var repo in repos)

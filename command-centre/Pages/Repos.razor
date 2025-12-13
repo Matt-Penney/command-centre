@@ -8,27 +8,37 @@
     <Markup Content="📁 Repositories" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
     <Newline />
 
-    <TextInput Placeholder="Search repos..." 
-           Value="@searchQuery" 
-           ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
-           OnSubmit="@HandleEnter"
-           FocusedColor="@Color.Blue" />
+    <TextInput Placeholder="Search Repositories..." 
+               Value="@searchQuery" 
+               ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
+               OnSubmit="@HandleEnter"
+               FocusedColor="@Color.Blue" />
     <Newline />
 
     <Select Options="@GetFilteredRepos().Select(r => $"📁 {r.Name}").ToArray()"
-        Value="@SelectedRepo"
-        ValueChanged="@SelectRepo"
-        OnSelected="@HandleEnter"
-        IsFocused="true"
-        Expand="true" />
+            Value="@SelectedRepo"
+            ValueChanged="@SelectRepo"
+            OnSelected="@HandleEnter"
+            IsFocused="true"
+            Expand="true" />
 
-    <Markup Content="@($"Selected Repo: {SelectedRepo}")" Foreground="@Color.Grey70" />
+    @if(!string.IsNullOrEmpty(SelectedRepo))
+    {
+        @* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
+        @* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
+        @* latest release version (with date created) if releases dont exist then dont show panel *@
+        @* repo health indicators, not 100% on what this is yet, maybe tests *@
+        @* Commit frequency chart (last 30 days) (bar chart) *@
+    }
+
 </Rows>
 
 @if (!GetFilteredRepos().Any())
 {
     <Markup Content="No repos match your search" Foreground="@Color.Red" />
 }
+
+<Markup Content="@($"Selected Repo: {SelectedRepo}")" Foreground="@Color.Grey70" />
 
 @code {
     private string searchQuery = "";
