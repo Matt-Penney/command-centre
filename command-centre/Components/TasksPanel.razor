@@ -1,0 +1,30 @@
+@namespace CommandCentre.Components
+@using CommandCentre.Models
+
+<Panel Title="✅ Today's Tasks" BorderColor="@Color.Yellow">
+    <Rows>
+        @foreach (var task in _todaysTasks)
+        {
+            <Markup Content="@($"{(task.Completed ? "✅" : "❌")} {task.Name}")" />
+        }
+        @if (!_todaysTasks.Any())
+        {
+            <Markup Content="No tasks for today" Foreground="@Color.Grey" />
+        }
+    </Rows>
+</Panel>
+
+@code {
+    private List<TodoTask> _todaysTasks = new()
+    {
+        new TodoTask { Name = "Review PRs", Completed = false },
+        new TodoTask { Name = "Update documentation", Completed = true },
+        new TodoTask { Name = "Deploy to staging", Completed = false }
+    };
+
+    private class TodoTask
+    {
+        public string Name { get; set; } = "";
+        public bool Completed { get; set; }
+    }
+}

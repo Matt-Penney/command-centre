@@ -1,0 +1,72 @@
+@namespace CommandCentre.Components
+@implements IDisposable
+
+<Panel Title="⏱️ Time Tracker" BorderColor="@Color.Magenta">
+    <Rows>
+        <Columns>
+            <Markup Content="Current Task:" Decoration="Decoration.Bold" />
+            <Markup Content="@_currentTask" Foreground="@Color.Cyan" />
+        </Columns>
+        <Newline />
+        <Columns>
+            <Markup Content="Time:" Decoration="Decoration.Bold" />
+            <Markup Content="@_elapsedTime" Foreground="@Color.Cyan" />
+        </Columns>
+        <Newline />
+        <Columns>
+            <TextButton Content="Start" OnClick="@StartTimer" />
+            <TextButton Content="Stop" OnClick="@StopTimer" />
+            <TextButton Content="Reset" OnClick="@ResetTimer" />
+        </Columns>
+    </Rows>
+</Panel>
+
+@code {
+    private string _currentTask = "No task running";
+    private string _elapsedTime = "00:00:00";
+    private System.Timers.Timer? _timer;
+    private DateTime _startTime;
+    private TimeSpan _elapsed = TimeSpan.Zero;
+    private bool _disposed = false;
+
+    private void StartTimer()
+    {
+        _startTime = DateTime.Now;
+        _timer = new System.Timers.Timer(1000);
+        _timer.Elapsed += (s, e) =>
+        {
+            if (!_disposed)
+            {
+                _elapsed = DateTime.Now - _startTime;
+                _elapsedTime = _elapsed.ToString(@"hh\:mm\:ss");
+                InvokeAsync(StateHasChanged);
+            }
+        };
+        _timer.Start();
+        _currentTask = "Working...";
+        StateHasChanged();
+    }
+    
+    private void StopTimer()
+    {
+        _timer?.Stop();
+        _currentTask = "Paused";
+        StateHasChanged();
+    }
+    
+    private void ResetTimer()
+    {
+        _timer?.Stop();
+        _elapsed = TimeSpan.Zero;
+        _elapsedTime = "00:00:00";
+        _currentTask = "No task running";
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _timer?.Stop();
+        _timer?.Dispose();
+    }
+}

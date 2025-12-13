@@ -1,0 +1,92 @@
+@namespace CommandCentre.Components
+@using CommandCentre.Models
+@using CommandCentre.Services
+@implements IDisposable
+@inject GitHubService GitHubService
+
+<Panel Title="🔀 My Open PRs" BorderColor="@Color.Magenta">
+    <Rows>
+        @if (!_isGitHubAuthenticated)
+        {
+            <Markup Content="⚠️  GitHub CLI not authenticated" Foreground="@Color.Yellow" />
+            <Markup Content="Install: brew install gh" Foreground="@Color.Grey" />
+            <Markup Content="Then run: gh auth login" Foreground="@Color.Grey" />
+        }
+        else if (_pullRequests.Any())
+        {
+            foreach (var pr in _pullRequests)
+            {
+                var statusEmoji = pr.BuildStatus switch
+                {
+                    "success" => "✅",
+                    "failure" => "❌",
+                    "pending" => "⏳",
+                    _ => "❓"
+                };
+                
+                <Markup Content="@($"{statusEmoji} #{pr.Number} - {pr.Title}")" Foreground="@Color.White" />
+                <Markup Content="@($"    {pr.Repo} • {pr.CreatedAt:MMM dd}")" Foreground="@Color.Grey70" />
+            }
+        }
+        else if (_loadingPRs)
+        {
+            <Spinner />
+            <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
+        }
+        else
+        {
+            <Markup Content="No open pull requests" Foreground="@Color.Grey" />
+        }
+    </Rows>
+</Panel>
+
+@code {
+    private List<PullRequest> _pullRequests = new();
+    private bool _loadingPRs = false;
+    private bool _isGitHubAuthenticated = false;
+    private bool _disposed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isGitHubAuthenticated = await GitHubService.IsAuthenticated();
+        
+        if (_isGitHubAuthenticated)
+        {
+            await LoadPullRequests();
+        }
+    }
+
+    private async Task LoadPullRequests()
+    {
+        if (!_isGitHubAuthenticated || _disposed) return;
+        
+        _loadingPRs = true;
+        await InvokeAsync(StateHasChanged);
+        
+        try
+        {
+            Console.WriteLine("Loading pull requests...");
+            _pullRequests = await GitHubService.GetMyOpenPullRequests();
+            Console.WriteLine($"Loaded {_pullRequests.Count} pull requests");
+            
+            foreach (var pr in _pullRequests)
+            {
+                Console.WriteLine($"PR: {pr.Title} - {pr.BuildStatus}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading pull requests: {ex.Message}");
+        }
+        finally
+        {
+            _loadingPRs = false;
+            if (!_disposed) await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+    }
+}

@@ -3,10 +3,9 @@
 @using System.Diagnostics
 @using CommandCentre.Models
 @using CommandCentre.Services
-@implements IDisposable
+@using CommandCentre.Components
 @inject RepoService RepoService
 @inject NavigationManager Navigation
-@inject GitHubService GitHubService
 
 <Rows>
     <Markup Content="⚡️ Dashboard" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
@@ -20,338 +19,32 @@
            IsFocused="true"
            FocusedColor="@Color.Blue" />
     <Newline />
-    
-    @* System Stats *@
-    <Panel Title="💻 System Stats" BorderColor="@Color.Blue">
-        <Rows>
-            <Columns>
-              <Markup Content="CPU:" Foreground="@Color.Grey" />
-              <Markup Content="@($"{_cpuUsage}%")" Foreground="@Color.Green" />
-            </Columns>
-            <Columns>
-                    <Markup Content="Memory:" Foreground="@Color.Grey" />
-                    <Markup Content="@($"{_memoryUsage}GB / {_totalMemory}GB")" Foreground="@Color.Yellow"/>
-            </Columns>
-            <Columns>
-                    <Markup Content="Uptime:" Foreground="@Color.Grey" />
-                    <Markup Content="@($"{_uptime}")" Foreground="@Color.Cyan" />
-            </Columns>
-        </Rows>
-    </Panel>
-    
+
+    <Columns>
+        <SystemStatsPanel />
+        <Newline />
+        <GitStatusPanel />
+        <Newline />
+        <PullRequestsPanel />
+    </Columns>
+
     <Newline />
-    
-    @* Git Status Indicator *@
-    <Panel Title="🔀 Git Status" BorderColor="@Color.Green">
-        <Rows>
-            @foreach (var repo in _repos)
-            {
-              <Columns>
-                <Markup Content="@($"{repo.Name}:")" Foreground="@Color.Grey" />
-                <Markup Content="@GetGitStatusMarkup(_repoStatuses[repo.Name])" />
-              </Columns>
-            }
-        </Rows>
-    </Panel>
-    
-    <Newline />
-    
-    <Panel Title="🔀 My Open Pull Requests" BorderColor="@Color.Magenta">
-        <Rows>
-            @if (!_isGitHubAuthenticated)
-            {
-                <Markup Content="⚠️  GitHub CLI not authenticated" Foreground="@Color.Yellow" />
-                <Markup Content="Run: gh auth login" Foreground="@Color.Grey" />
-            }
-            else if (_pullRequests.Any())
-            {
-                foreach (var pr in _pullRequests)
-                {
-                    var statusEmoji = pr.BuildStatus switch
-                    {
-                        "success" => "✅",
-                        "failure" => "❌",
-                        "pending" => "⏳",
-                        _ => "❓"
-                    };
-                    
-                    <Markup Content="@($"{statusEmoji} #{pr.Number} - {pr.Title}")" Foreground="@Color.White" />
-                    <Markup Content="@($"    {pr.Repo} • {pr.CreatedAt:MMM dd}")" Foreground="@Color.Grey70" />
-                }
-            }
-            else if (_loadingPRs)
-            {
-                <Spinner />
-                <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
-            }
-            else
-            {
-                <Markup Content="No open pull requests" Foreground="@Color.Grey" />
-            }
-        </Rows>
-    </Panel>
-    
-    <Newline />
-    
-    @* Today's Tasks *@
-    <Panel Title="✅ Today's Tasks" BorderColor="@Color.Yellow">
-        <Rows>
-            @foreach (var task in _todaysTasks)
-            {
-                <Markup Content="@($"{(task.Completed ? "✅" : "❌")} {task.Name}")" />
-            }
-            @if (!_todaysTasks.Any())
-            {
-                <Markup Content="No tasks for today" Foreground="@Color.Grey" />
-            }
-        </Rows>
-    </Panel>
-    
-    <Newline />
-    
-    @* Time Tracker *@
-    <Panel Title="⏱️ Time Tracker" BorderColor="@Color.Magenta">
-        <Rows>
-            <Columns>
-              <Markup Content="Current Task:" Decoration="Decoration.Bold"  />
-              <Markup Content="@($"{_currentTask}")" Foreground="@Color.Cyan" />
-            </Columns>
-            <Newline />
-            <Columns>
-              <Markup Content="Time:" Decoration="Decoration.Bold" />
-              <Markup Content="@($"{_elapsedTime}")" Foreground="@Color.Cyan" />
-            </Columns>
-            <Newline />
-            <Columns>
-                <TextButton Content="Start" OnClick="@StartTimer" />
-                <TextButton Content="Stop" OnClick="@StopTimer" />
-                <TextButton Content="Reset" OnClick="@ResetTimer" />
-            </Columns>
-        </Rows>
-    </Panel>
+
+    <Columns>
+        <TasksPanel />
+        <Newline />
+        <TimeTrackerPanel />
+    </Columns>
 </Rows>
 
 @code {
     private string _searchQuery = "";
-    private string _cpuUsage = "0";
-    private string _memoryUsage = "0";
-    private string _totalMemory = "16";
-    private string _uptime = "0h 0m";
     
     private List<RepoInfo> _repos = new();
-    private Dictionary<string, RepoStatus> _repoStatuses = new();
-    
-    private List<TodoTask> _todaysTasks = new()
-    {
-        new TodoTask { Name = "Review PRs", Completed = false },
-        new TodoTask { Name = "Update documentation", Completed = true },
-        new TodoTask { Name = "Deploy to staging", Completed = false }
-    };
-    
-    private string _currentTask = "No task running";
-    private string _elapsedTime = "00:00:00";
-    private System.Timers.Timer? _timer;
-    private System.Timers.Timer? _statsTimer;
-    private DateTime _startTime;
-    private TimeSpan _elapsed = TimeSpan.Zero;
-    private bool _disposed = false;
-    
-    private List<PullRequest> _pullRequests = new();
-    private bool _loadingPRs = false;
-    private bool _isGitHubAuthenticated = false;
 
     protected override async Task OnInitializedAsync()
     {
         _repos = RepoService.GetAllRepos();
-
-        foreach (var repo in _repos)
-        {
-            _repoStatuses[repo.Name] = new RepoStatus 
-            { 
-                Name = repo.Name, 
-                HasChanges = false, 
-                ChangeCount = 0,
-                IsLoading = true 
-            };
-        }
-        
-        await LoadSystemStats();
-        await LoadGitStatuses();
-        
-        _isGitHubAuthenticated = await GitHubService.IsAuthenticated();
-        if (_isGitHubAuthenticated)
-        {
-            await LoadPullRequests();
-        }
-        
-        // Start live updates for system stats every 5 seconds
-        _statsTimer = new System.Timers.Timer(5000);
-        _statsTimer.Elapsed += async (s, e) =>
-        {
-            if (!_disposed) await LoadSystemStats();
-        };
-        _statsTimer.Start();
-    }
-    
-    public void Dispose()
-    {
-        _disposed = true;
-        _timer?.Stop();
-        _timer?.Dispose();
-        _statsTimer?.Stop();
-        _statsTimer?.Dispose();
-    }
-    
-    private async Task LoadSystemStats()
-    {
-        if (_disposed) return;
-        
-        try
-        {
-            // Get CPU usage
-            _cpuUsage = await RunBashCommand("top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
-            
-            // Get memory usage
-            var pages = await RunBashCommand("vm_stat | grep 'Pages active' | awk '{print $3}' | sed 's/\\.//'");
-            if (int.TryParse(pages.Trim(), out int pageCount))
-            {
-                _memoryUsage = ((pageCount * 4096) / (1024 * 1024 * 1024)).ToString("F1");
-            }
-            
-            // Get uptime
-            var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
-            _uptime = $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m";
-            
-            if (!_disposed) await InvokeAsync(StateHasChanged);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading system stats: {ex.Message}");
-        }
-    }
-    
-    private async Task<string> RunBashCommand(string command)
-    {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            }
-        };
-        process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        return output.Trim();
-    }
-    
-    private async Task LoadGitStatuses()
-    {
-        if (_disposed) return;
-
-        foreach (var repo in _repos)
-        {
-            if (_disposed) return;
-            
-            await LoadSingleRepoStatus(repo);
-            await InvokeAsync(StateHasChanged);
-            
-            await Task.Delay(1000);
-        }
-    }
-    
-    private async Task<RepoStatus> LoadSingleRepoStatus(RepoInfo repo)
-    {
-        if (_disposed) return new RepoStatus { Name = repo.Name, HasChanges = false, ChangeCount = 0, IsLoading = false };
-        
-        try
-        {
-            var status = await GetRepoStatus(repo);
-            
-            if (!_disposed)
-            {
-                _repoStatuses[repo.Name] = status;
-            }
-            
-            return status;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error checking git status for {repo.Name}: {ex.Message}");
-            
-            var errorStatus = new RepoStatus 
-            { 
-                Name = repo.Name, 
-                HasChanges = false, 
-                ChangeCount = 0,
-                IsLoading = false 
-            };
-            
-            if (!_disposed)
-            {
-                _repoStatuses[repo.Name] = errorStatus;
-            }
-            
-            return errorStatus;
-        }
-    }
-    
-    private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
-    {
-        var output = await RunBashCommand($"cd '{repo.Path}' 2>/dev/null && git status --porcelain 2>/dev/null || echo ''");
-        var hasChanges = !string.IsNullOrWhiteSpace(output);
-        
-        return new RepoStatus
-        {
-            Name = repo.Name,
-            HasChanges = hasChanges,
-            ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0,
-            IsLoading = false
-        };
-    }
-    
-    private string GetGitStatusMarkup(RepoStatus status)
-    {
-        if (status.IsLoading) return "⏳";
-        return status.HasChanges ? "🚨" : "✅";
-    }
-    
-    private void StartTimer()
-    {
-        _startTime = DateTime.Now;
-        _timer = new System.Timers.Timer(1000);
-        _timer.Elapsed += (s, e) =>
-        {
-            if (!_disposed)
-            {
-                _elapsed = DateTime.Now - _startTime;
-                _elapsedTime = _elapsed.ToString(@"hh\:mm\:ss");
-                InvokeAsync(StateHasChanged);
-            }
-        };
-        _timer.Start();
-        _currentTask = "Working...";
-        StateHasChanged();
-    }
-    
-    private void StopTimer()
-    {
-        _timer?.Stop();
-        _currentTask = "Paused";
-        StateHasChanged();
-    }
-    
-    private void ResetTimer()
-    {
-        _timer?.Stop();
-        _elapsed = TimeSpan.Zero;
-        _elapsedTime = "00:00:00";
-        _currentTask = "No task running";
-        StateHasChanged();
     }
     
     private void HandleQuickSearch()
@@ -371,48 +64,5 @@
         }
         
         StateHasChanged();
-    }
-
-    private async Task LoadPullRequests()
-    {
-        if (!_isGitHubAuthenticated) return;
-        
-        _loadingPRs = true;
-        await InvokeAsync(StateHasChanged);
-        
-        try
-        {
-            Console.WriteLine("Loading pull requests...");
-            _pullRequests = await GitHubService.GetMyOpenPullRequests();
-            Console.WriteLine($"Loaded {_pullRequests.Count} pull requests");
-            
-            foreach (var pr in _pullRequests)
-            {
-                Console.WriteLine($"PR: {pr.Title} - {pr.BuildStatus}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading pull requests: {ex.Message}");
-        }
-        finally
-        {
-            _loadingPRs = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-    
-    private class RepoStatus
-    {
-        public string Name { get; set; } = "";
-        public bool HasChanges { get; set; }
-        public int ChangeCount { get; set; }
-        public bool IsLoading { get; set; } = false;
-    }
-    
-    private class TodoTask
-    {
-        public string Name { get; set; } = "";
-        public bool Completed { get; set; }
     }
 }
