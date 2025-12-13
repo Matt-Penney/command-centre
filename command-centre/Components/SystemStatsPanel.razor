@@ -13,7 +13,7 @@
             <Markup Content="@($"{_memoryUsage}GB / {_totalMemory}GB")" Foreground="@Color.Yellow"/>
         </Columns>
         <Columns>
-            <Markup Content="Temporature:" Foreground="@Color.Grey" />
+            <Markup Content="Temperature:" Foreground="@Color.Grey" />
             <Markup Content="@($"{_temperature}°C")" Foreground="@Color.Chartreuse1" />
         </Columns>
         <Columns>
@@ -48,11 +48,13 @@
     private async Task LoadSystemStats()
     {
         if (_disposed) return;
-        
+
         try
         {
             // Get CPU usage
-            _cpuUsage = await RunBashCommand("top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
+            _cpuUsage = !OperatingSystem.IsWindows()
+                ? await RunBashCommand("top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'")
+                : "N/A";
             
             // Get memory usage
             var pages = await RunBashCommand("vm_stat | grep 'Pages active' | awk '{print $3}' | sed 's/\\.//'");
@@ -62,13 +64,13 @@
             }
 
             // Get temperature
-            @* _temperature = await RunBashCommand("osx-cpu-temp | awk '{print $1}' | sed 's/°C//'"); *@
-            _temperature = "N/A"; // Placeholder as osx-cpu-temp is not be installed
-            
+            <!-- @* _temperature = await RunBashCommand("osx-cpu-temp | awk '{print $1}' | sed 's/°C//'"); *@
+            _temperature = "N/A"; // Placeholder as osx-cpu-temp is not be installed -->
+
             // Get uptime
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             _uptime = $"{uptime.Days}d {uptime.Hours}h {uptime.Minutes}m";
-            
+
             if (!_disposed) await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
@@ -79,21 +81,43 @@
     
     private async Task<string> RunBashCommand(string command)
     {
-        using var process = new Process
+        try
         {
-            StartInfo = new ProcessStartInfo
+            string fileName;
+            string arguments;
+            if (OperatingSystem.IsWindows())
             {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
+                fileName = "cmd.exe";
+                arguments = $"/C {command}";
             }
-        };
-        process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        return output.Trim();
+            else
+            {
+                fileName = "/bin/bash";
+                arguments = $"-c \"{command}\"";
+            }
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var error = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            return string.IsNullOrWhiteSpace(output) ? error.Trim() : output.Trim();
+        }
+        catch
+        {
+            return "N/A";
+        }
     }
 
     public void Dispose()

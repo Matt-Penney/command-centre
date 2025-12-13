@@ -5,7 +5,7 @@
 @implements IDisposable
 @inject RepoService RepoService
 
-<Panel Title="🔀 Git Changes Status" BorderColor="@Color.Green" Width="30">
+<Panel Title="🔀 Git Changes Status" BorderColor="@Color.Green" Width="25">
     <Rows>
         @foreach (var repo in _repos)
         {
@@ -113,21 +113,37 @@
 
     private async Task<string> RunBashCommand(string command)
     {
+        string fileName;
+        string arguments;
+        if (OperatingSystem.IsWindows())
+        {
+            fileName = "cmd.exe";
+            arguments = $"/C {command}";
+        }
+        else
+        {
+            // Use bash for Unix-like systems
+            fileName = "/bin/bash";
+            arguments = $"-c \"{command}\"";
+        }
+
         using var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
+                FileName = fileName,
+                Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true
             }
         };
         process.Start();
         var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
-        return output.Trim();
+        return string.IsNullOrWhiteSpace(output) ? error.Trim() : output.Trim();
     }
 
     public void Dispose()

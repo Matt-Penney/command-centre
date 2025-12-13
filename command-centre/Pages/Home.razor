@@ -31,6 +31,12 @@
     <Columns>
         <SystemStatsPanel />
         <Newline />
+        <TasksPanel />
+    </Columns>
+
+    <Newline />
+
+    <Columns>
         <GitStatusPanel />
         <Newline />
         <PullRequestsPanel />
@@ -38,11 +44,9 @@
 
     <Newline />
 
-    <Columns>
-        <TasksPanel />
-        <Newline />
-        <TimeTrackerPanel />
-    </Columns>
+    <!-- <Columns> -->
+        <!-- <TimeTrackerPanel /> For no obvious reason, this is causing render issues -->
+    <!-- </Columns> -->
 </Rows>
 
 @code {

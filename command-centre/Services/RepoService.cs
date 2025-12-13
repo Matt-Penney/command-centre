@@ -117,17 +117,15 @@ public class RepoService
 
     private void OpenRepoInWsl(RepoInfo repo)
     {
-        var wslPath = repo.Path.Replace("/mnt/", "").Replace("/", "\\");
-        
         var process = new Process {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "wsl",
-                Arguments = $"code \"{wslPath}\"",
+                FileName = "wsl.exe",
+                Arguments = $"-d Ubuntu --cd \"{repo.Path}\" -- bash -c \"code .; exec bash\"",
+                UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = false // Show the terminal window
             }
         };
         process.Start();
@@ -136,22 +134,42 @@ public class RepoService
 
     private void OpenRepoInVisualStudioCode(RepoInfo repo)
     {
-        var command = $"open -a 'Visual Studio Code' '{repo.Path}'";
-
-        var process = new Process
+        if (OperatingSystem.IsWindows())
         {
-            StartInfo = new ProcessStartInfo
+            var process = new Process
             {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
-        };
-        process.Start();
-        process.WaitForExit();
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/C code \"{repo.Path}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            process.WaitForExit();
+        }
+        else
+        {
+            // Use open command on macOS/Linux
+            var command = $"open -a 'Visual Studio Code' '{repo.Path}'";
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{command}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            process.WaitForExit();
+        }
     }
 
     private void OpenRepoInVisualStudio(RepoInfo repo)

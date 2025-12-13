@@ -20,31 +20,59 @@ public class GitHubService
     {
         try
         {
-            // First check if gh is installed
-            var process = new Process
+            // First check if gh is installed (cross-platform)
+            string ghPath = "";
+            if (OperatingSystem.IsWindows())
             {
-                StartInfo = new ProcessStartInfo
+                // Use 'where' command on Windows
+                var process = new Process
                 {
-                    FileName = "/bin/bash",
-                    Arguments = "-c \"which gh\"",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = "/C where gh",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                var whichOutput = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                if (string.IsNullOrWhiteSpace(whichOutput))
+                {
+                    Console.WriteLine("GitHub CLI (gh) is not installed");
+                    return false;
                 }
-            };
-
-            process.Start();
-            var whichOutput = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            if (string.IsNullOrEmpty(whichOutput))
+                ghPath = whichOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "gh";
+            }
+            else
             {
-                Console.WriteLine("GitHub CLI (gh) is not installed");
-                return false;
+                // Use 'which' command on Unix
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "/bin/bash",
+                        Arguments = "-c \"which gh\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
+                process.Start();
+                var whichOutput = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                if (string.IsNullOrWhiteSpace(whichOutput))
+                {
+                    Console.WriteLine("GitHub CLI (gh) is not installed");
+                    return false;
+                }
+                ghPath = whichOutput.Trim();
             }
 
-            var ghPath = whichOutput.Trim();
             var authProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -64,12 +92,11 @@ public class GitHubService
             await authProcess.WaitForExitAsync();
 
             var fullOutput = output + error;
-            
-            var isAuthenticated = fullOutput.Contains("Logged in") || 
+
+            var isAuthenticated = fullOutput.Contains("Logged in") ||
                                   fullOutput.Contains("✓") ||
                                   authProcess.ExitCode == 0;
-            
-            // Console.WriteLine($"GitHub authenticated: {isAuthenticated}");
+
             return isAuthenticated;
         }
         catch (Exception ex)
@@ -117,7 +144,7 @@ public class GitHubService
         var prs = new List<PullRequest>();
         
         // Check if repo path exists
-        if (!System.IO.Directory.Exists(repo.Path))
+        if (!System.IO.Directory.Exists(repo.Path) && repo.Type != "wsl") // wsl repos may use ~ paths
         {
             return (prs, new PRLoadStatus
             {
@@ -129,6 +156,7 @@ public class GitHubService
 
         // Get current git user
         var gitUser = await RunGitCommand(repo.Path, "config user.name");
+        gitUser = "Matt-Penney"; // temp hardcode as this is correct value
         if (string.IsNullOrEmpty(gitUser))
         {
             return (prs, new PRLoadStatus
@@ -141,6 +169,12 @@ public class GitHubService
 
         // Get remote URL to determine GitHub repo
         var remoteUrl = await RunGitCommand(repo.Path, "config --get remote.origin.url");
+        
+        // temp fix for wsl and customer-portal
+        if (repo.Name == "customer-portal" && repo.Type == "wsl")
+        {
+            remoteUrl = await RunGitCommand("C://Repos//customer-portal", "config --get remote.origin.url");
+        }
         if (string.IsNullOrEmpty(remoteUrl))
         {
             return (prs, new PRLoadStatus
@@ -164,7 +198,7 @@ public class GitHubService
         }
 
         // Use GitHub CLI to fetch PRs
-        var ghCommand = $"pr list --author \"{gitUser.Trim()}\" --state open --json number,title,url,statusCheckRollup,createdAt --repo {owner}/{repoName}";
+        var ghCommand = $"pr list --author \"@me\" --state \"open\" --json \"number,title,url,statusCheckRollup,createdAt\" --repo {owner}/{repoName}";
         var output = await RunCommand("gh", ghCommand);
 
         if (string.IsNullOrEmpty(output))
@@ -189,21 +223,30 @@ public class GitHubService
                     Message = "Failed to parse PR data"
                 });
             }
+            else if (prData.Count == 0)
+            {
+                return (prs, new PRLoadStatus
+                {
+                    RepoName = repo.Name,
+                    Success = true,
+                    Message = "No open PRs"
+                });
+            }
 
             foreach (var pr in prData)
             {
-                var buildStatus = DetermineBuildStatus(pr.StatusCheckRollup);
+                var buildStatus = DetermineBuildStatus(pr.statusCheckRollup);
                 prs.Add(new PullRequest
                 {
-                    Title = pr.Title,
+                    Title = pr.title,
                     Repo = repo.Name,
-                    Number = pr.Number,
+                    Number = pr.number,
                     Author = gitUser.Trim(),
-                    Url = pr.Url,
+                    Url = pr.url,
                     Status = "open",
                     HasFailedChecks = buildStatus == "failure",
                     BuildStatus = buildStatus,
-                    CreatedAt = pr.CreatedAt
+                    CreatedAt = pr.createdAt
                 });
             }
 
@@ -229,13 +272,13 @@ public class GitHubService
     {
         if (checks == null || !checks.Any()) return "unknown";
 
-        if (checks.Any(c => c.State == "FAILURE" || c.State == "ERROR"))
+        if (checks.Any(c => c.conclusion == "FAILURE" || c.conclusion == "ERROR"))
             return "failure";
         
-        if (checks.Any(c => c.State == "PENDING" || c.State == "IN_PROGRESS"))
+        if (checks.Any(c => c.conclusion == "PENDING" || c.conclusion == "IN_PROGRESS"))
             return "pending";
         
-        if (checks.All(c => c.State == "SUCCESS"))
+        if (checks.All(c => c.conclusion == "SUCCESS"))
             return "success";
 
         return "unknown";
@@ -304,15 +347,15 @@ public class GitHubService
 
     private class GitHubPR
     {
-        public int Number { get; set; }
-        public string Title { get; set; } = "";
-        public string Url { get; set; } = "";
-        public List<StatusCheck>? StatusCheckRollup { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public int number { get; set; }
+        public string title { get; set; } = "";
+        public string url { get; set; } = "";
+        public List<StatusCheck>? statusCheckRollup { get; set; }
+        public DateTime createdAt { get; set; }
     }
 
     private class StatusCheck
     {
-        public string State { get; set; } = "";
+        public string conclusion { get; set; } = "";
     }
 }

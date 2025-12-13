@@ -1,27 +1,27 @@
 [
   {
     "Name": "customer-portal",
-    "Path": "/Users/matthewpenney/repos/customer-portal",
+    "Path": "~/customer-portal",
     "Type": "wsl"
   },
   {
     "Name": "devops",
-    "Path": "/Users/matthewpenney/devops",
+    "Path": "C:\\Repos\\devops",
     "Type": "code"
   },
   {
     "Name": "infrastructure",
-    "Path": "/Users/matthewpenney/repos/infrastructure",
+    "Path": "C:\\Repos\\infrastructure",
     "Type": "code"
   },
   {
     "Name": "ignite-portal",
-    "Path": "/Users/matthewpenney/repos/ignite-portal",
+    "Path": "C:\\Repos\\ignite-portal",
     "Type": "code"
   },
   {
     "Name": "ignite",
-    "Path": "/Users/matthewpenney/repos/ignite",
+    "Path": "C:\\Repos\\ignite",
     "Type": "code"
   },
   {
@@ -36,7 +36,7 @@
   },
   {
     "Name": "wintrix",
-    "Path": "c://repos/wintrix",
+    "Path": "C:\\Repos\\wintrix",
     "Type": "studio"
   }
 ]
