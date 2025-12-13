@@ -8,6 +8,9 @@ public class GitHubService
 {
     private readonly RepoService _repoService;
 
+    private List<PullRequest> allPRs = new List<PullRequest>();
+    private List<PRLoadStatus> statuses = new List<PRLoadStatus>();
+
     public GitHubService(RepoService repoService)
     {
         _repoService = repoService;
@@ -79,8 +82,6 @@ public class GitHubService
 
     public async Task<(List<PullRequest> prs, List<PRLoadStatus> statuses)> GetMyOpenPullRequests()
     {
-        var allPRs = new List<PullRequest>();
-        var statuses = new List<PRLoadStatus>();
         var repos = _repoService.GetAllRepos();
 
         foreach (var repo in repos)

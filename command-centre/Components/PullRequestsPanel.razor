@@ -14,8 +14,10 @@
         }
         else if (_loadingPRs)
         {
-            <Spinner />
-            <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
+            <Columns>
+                <Spinner />
+                <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
+            </Columns>
         }
         else
         {
@@ -46,7 +48,7 @@
             @if (_loadStatuses.Any())
             {
                 <TextButton Content="@(_showDetails ? "▼ Hide Load Details" : "▶ Show Load Details")" 
-                           OnClick="@(() => { _showDetails = !_showDetails; StateHasChanged(); })" />
+                            OnClick="@(() => { _showDetails = !_showDetails; StateHasChanged(); })" />
                 
                 @if (_showDetails)
                 {

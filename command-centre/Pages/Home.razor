@@ -6,9 +6,10 @@
 @using CommandCentre.Components
 @inject RepoService RepoService
 @inject NavigationManager Navigation
+@implements IDisposable
 
 <Rows>
-    <Markup Content="⚡️ Dashboard" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Markup Content="@($"⚡️ Dashboard - {now}")" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
     <Newline />
     
     @* Global Search Bar *@
@@ -41,12 +42,30 @@
 
 @code {
     private string _searchQuery = "";
-    
+    private string now = DateTime.Now.ToString("HH:mm:ss");
+    private System.Timers.Timer? _timer;
+    private bool _disposed = false;
+
     private List<RepoInfo> _repos = new();
 
     protected override async Task OnInitializedAsync()
     {
         _repos = RepoService.GetAllRepos();
+
+        // Update every 1 second
+        _timer = new System.Timers.Timer(1000);
+        _timer.Elapsed += async (s, e) =>
+        {
+            if (!_disposed) await GetCurrentTime();
+        };
+        _timer.Start();
+    }
+
+    private async Task GetCurrentTime()
+    {
+        now = DateTime.Now.ToString("HH:mm:ss");
+
+        if (!_disposed) await InvokeAsync(StateHasChanged);
     }
     
     private void HandleQuickSearch()
@@ -66,5 +85,11 @@
         }
         
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _timer?.Dispose();
     }
 }

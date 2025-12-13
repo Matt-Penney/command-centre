@@ -9,10 +9,10 @@
     <Newline />
 
     <TextInput Placeholder="Search utilities..." 
-            Value="@_searchQuery" 
-            ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-            IsFocused="true"
-            FocusedColor="@Color.Blue" />
+               Value="@_searchQuery" 
+               ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+               IsFocused="true"
+               FocusedColor="@Color.Blue" />
     <Newline />
 
     @if (!GetFilteredUtilities().Any())
@@ -21,7 +21,7 @@
     }
     else
     {
-        <Select Options="@GetFilteredUtilities().Select(u => $"🛠️ {u.Name}").ToArray()"
+        <Select Options="@GetFilteredUtilities().Select(u => $"🛠️  {u.Name}").ToArray()"
                 Value="@_selectedUtility"
                 ValueChanged="@SelectUtility"
                 OnSelected="@ExecuteSelected"
