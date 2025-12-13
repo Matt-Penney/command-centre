@@ -89,7 +89,7 @@ public class RepoService
         }
     }
 
-    public void OpenRepo(RepoInfo repo)
+    public bool OpenRepo(RepoInfo repo)
     {
         try {
             switch (repo.Type.ToLower())
@@ -106,10 +106,12 @@ public class RepoService
                 default:
                     throw new NotImplementedException($"Repo type '{repo.Type}' is not supported yet.");
             }
+            return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error opening repo: {ex.Message}");
+            // Console.WriteLine($"Error opening repo: {ex.Message}");
+            return false;
         }
     }
 

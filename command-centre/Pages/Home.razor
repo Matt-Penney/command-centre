@@ -13,12 +13,19 @@
     <Newline />
     
     @* Global Search Bar *@
-    <TextInput Placeholder="🔍 Quick search repos (press Enter)..." 
-           Value="@_searchQuery" 
-           ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-           OnSubmit="@HandleQuickSearch"
-           IsFocused="true"
-           FocusedColor="@Color.Blue" />
+    <Columns>
+        <TextInput Placeholder="🔍 Quick search repos (press Enter)..." 
+                   Value="@_searchQuery" 
+                   ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+                   OnSubmit="@HandleQuickSearch"
+                   IsFocused="true"
+                   FocusedColor="@Color.Blue" />
+
+        @if (!string.IsNullOrWhiteSpace(_searchError))
+        {
+            <Markup Content="@_searchError" Foreground="@Color.Red" />
+        }
+    </Columns>
     <Newline />
 
     <Columns>
@@ -40,6 +47,8 @@
 
 @code {
     private string _searchQuery = "";
+    private string _searchError = "";
+
     private string now = DateTime.Now.ToString("HH:mmtt");
     private System.Timers.Timer? _timer;
     private bool _disposed = false;
@@ -74,7 +83,15 @@
         
         if (matches.Count == 1)
         {
-            RepoService.OpenRepo(matches[0]);
+            var success = RepoService.OpenRepo(matches[0]);
+
+            if (!success)
+            {
+                _searchError = $"Error opening repo: {matches[0].Name}";
+                StateHasChanged();
+                return;
+            }
+            
             _searchQuery = "";
         }
         else if (matches.Any())
