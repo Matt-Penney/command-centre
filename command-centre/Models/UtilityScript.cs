@@ -7,4 +7,5 @@ public class UtilityScript
     public string Command { get; set; } = "";
     public string Type { get; set; } = "bash"; // bash, powershell, python, etc
     public bool RequiresConfirmation { get; set; } = false;
+    public bool RequiresAdmin { get; set; } = false;
 }

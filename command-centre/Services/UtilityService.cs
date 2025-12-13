@@ -43,7 +43,7 @@ public class UtilityService
         {
             var shell = utility.Type.ToLower() switch
             {
-                "powershell" => "pwsh",
+                "powershell" => "powershell",
                 "python" => "python3",
                 _ => "/bin/bash"
             };
@@ -55,25 +55,46 @@ public class UtilityService
                 _ => $"-c \"{utility.Command}\""
             };
 
-            var process = new Process
+            if (OperatingSystem.IsWindows() && utility.RequiresAdmin)
             {
-                StartInfo = new ProcessStartInfo
+                var process = new Process
                 {
-                    FileName = shell,
-                    Arguments = shellArgs,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = shell,
+                        Arguments = shellArgs,
+                        UseShellExecute = true,
+                        Verb = "runas",
+                        CreateNoWindow = false
+                    }
+                };
+                process.Start();
+                process.WaitForExit();
+                return (process.ExitCode == 0, "No output captured when running as admin", "");
+            }
+            else
+            {
+                // Normal execution, capture output
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = shell,
+                        Arguments = shellArgs,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
 
-            process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
+                process.Start();
+                var output = await process.StandardOutput.ReadToEndAsync();
+                var error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
 
-            return (process.ExitCode == 0, output, error);
+                return (process.ExitCode == 0, output, error);
+            }
         }
         catch (Exception ex)
         {
