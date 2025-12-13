@@ -5,7 +5,7 @@
 @implements IDisposable
 @inject RepoService RepoService
 
-<Panel Title="🔀 Git Status" BorderColor="@Color.Green">
+<Panel Title="🔀 Git Changes Status" BorderColor="@Color.Green" Width="30">
     <Rows>
         @foreach (var repo in _repos)
         {

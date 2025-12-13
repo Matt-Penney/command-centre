@@ -115,6 +115,17 @@ public class GitHubService
     private async Task<(List<PullRequest> prs, PRLoadStatus? status)> GetRepoPullRequests(RepoInfo repo)
     {
         var prs = new List<PullRequest>();
+        
+        // Check if repo path exists
+        if (!System.IO.Directory.Exists(repo.Path))
+        {
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = false,
+                Message = "Repo not active"
+            });
+        }
 
         // Get current git user
         var gitUser = await RunGitCommand(repo.Path, "config user.name");

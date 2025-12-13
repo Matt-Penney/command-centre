@@ -42,7 +42,7 @@
 
 @code {
     private string _searchQuery = "";
-    private string now = DateTime.Now.ToString("HH:mm:ss");
+    private string now = DateTime.Now.ToString("HH:mmtt");
     private System.Timers.Timer? _timer;
     private bool _disposed = false;
 
@@ -52,8 +52,8 @@
     {
         _repos = RepoService.GetAllRepos();
 
-        // Update every 1 second
-        _timer = new System.Timers.Timer(1000);
+        // Update every 30 seconds
+        _timer = new System.Timers.Timer(30000);
         _timer.Elapsed += async (s, e) =>
         {
             if (!_disposed) await GetCurrentTime();
@@ -63,7 +63,7 @@
 
     private async Task GetCurrentTime()
     {
-        now = DateTime.Now.ToString("HH:mm:ss");
+        now = DateTime.Now.ToString("HH:mmtt");
 
         if (!_disposed) await InvokeAsync(StateHasChanged);
     }

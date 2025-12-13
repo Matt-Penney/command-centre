@@ -24,11 +24,15 @@
 
     @if(!string.IsNullOrEmpty(SelectedRepo))
     {
+        @* TODO list *@
         @* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
+            @* gh search commits QUERY --repo repo.name --owner repo.owner *@
         @* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
         @* latest release version (with date created) if releases dont exist then dont show panel *@
         @* repo health indicators, not 100% on what this is yet, maybe tests *@
         @* Commit frequency chart (last 30 days) (bar chart) *@
+        @* 2 TextButtons, one to open browser of repo, other to open in File Explorer *@
+        @* maybe move the open repo logic into its own button, grouped with above *@
     }
 
 </Rows>
