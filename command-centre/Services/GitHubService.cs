@@ -77,28 +77,38 @@ public class GitHubService
         }
     }
 
-    public async Task<List<PullRequest>> GetMyOpenPullRequests()
+    public async Task<(List<PullRequest> prs, List<PRLoadStatus> statuses)> GetMyOpenPullRequests()
     {
         var allPRs = new List<PullRequest>();
+        var statuses = new List<PRLoadStatus>();
         var repos = _repoService.GetAllRepos();
 
         foreach (var repo in repos)
         {
             try
             {
-                var prs = await GetRepoPullRequests(repo);
+                var (prs, status) = await GetRepoPullRequests(repo);
                 allPRs.AddRange(prs);
+                if (status != null)
+                {
+                    statuses.Add(status);
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching PRs for {repo.Name}: {ex.Message}");
+                statuses.Add(new PRLoadStatus
+                {
+                    RepoName = repo.Name,
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                });
             }
         }
 
-        return allPRs.OrderByDescending(pr => pr.CreatedAt).ToList();
+        return (allPRs.OrderByDescending(pr => pr.CreatedAt).ToList(), statuses);
     }
 
-    private async Task<List<PullRequest>> GetRepoPullRequests(RepoInfo repo)
+    private async Task<(List<PullRequest> prs, PRLoadStatus? status)> GetRepoPullRequests(RepoInfo repo)
     {
         var prs = new List<PullRequest>();
 
@@ -106,54 +116,64 @@ public class GitHubService
         var gitUser = await RunGitCommand(repo.Path, "config user.name");
         if (string.IsNullOrEmpty(gitUser))
         {
-            Console.WriteLine($"No git user found for {repo.Name}");
-            return prs;
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = false,
+                Message = "No git user configured"
+            });
         }
-
-        Console.WriteLine($"Git user for {repo.Name}: {gitUser.Trim()}");
 
         // Get remote URL to determine GitHub repo
         var remoteUrl = await RunGitCommand(repo.Path, "config --get remote.origin.url");
         if (string.IsNullOrEmpty(remoteUrl))
         {
-            Console.WriteLine($"No remote URL found for {repo.Name}");
-            return prs;
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = false,
+                Message = "No remote URL found"
+            });
         }
-
-        Console.WriteLine($"Remote URL for {repo.Name}: {remoteUrl}");
 
         // Parse GitHub owner/repo from URL
         var (owner, repoName) = ParseGitHubUrl(remoteUrl);
         if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repoName))
         {
-            Console.WriteLine($"Could not parse GitHub URL for {repo.Name}");
-            return prs;
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = false,
+                Message = "Could not parse GitHub URL"
+            });
         }
 
-        Console.WriteLine($"Fetching PRs for {owner}/{repoName}");
-
-        // Use Git Hub CLI to fetch PRs
+        // Use GitHub CLI to fetch PRs
         var ghCommand = $"pr list --author \"{gitUser.Trim()}\" --state open --json number,title,url,statusCheckRollup,createdAt --repo {owner}/{repoName}";
         var output = await RunCommand("gh", ghCommand);
 
         if (string.IsNullOrEmpty(output))
         {
-            Console.WriteLine($"No PR output for {repo.Name}");
-            return prs;
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = true,
+                Message = "No open PRs"
+            });
         }
-
-        Console.WriteLine($"PR JSON output: {output}");
 
         try
         {
             var prData = JsonSerializer.Deserialize<List<GitHubPR>>(output);
             if (prData == null)
             {
-                Console.WriteLine($"Failed to deserialize PRs for {repo.Name}");
-                return prs;
+                return (prs, new PRLoadStatus
+                {
+                    RepoName = repo.Name,
+                    Success = false,
+                    Message = "Failed to parse PR data"
+                });
             }
-
-            Console.WriteLine($"Found {prData.Count} PRs for {repo.Name}");
 
             foreach (var pr in prData)
             {
@@ -171,13 +191,23 @@ public class GitHubService
                     CreatedAt = pr.CreatedAt
                 });
             }
+
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = true,
+                Message = $"Loaded {prData.Count} PR(s)"
+            });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error parsing PR data for {repo.Name}: {ex.Message}");
+            return (prs, new PRLoadStatus
+            {
+                RepoName = repo.Name,
+                Success = false,
+                Message = $"Parse error: {ex.Message}"
+            });
         }
-
-        return prs;
     }
 
     private string DetermineBuildStatus(List<StatusCheck>? checks)

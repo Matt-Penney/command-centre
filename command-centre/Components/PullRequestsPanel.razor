@@ -12,22 +12,6 @@
             <Markup Content="Install: brew install gh" Foreground="@Color.Grey" />
             <Markup Content="Then run: gh auth login" Foreground="@Color.Grey" />
         }
-        else if (_pullRequests.Any())
-        {
-            foreach (var pr in _pullRequests)
-            {
-                var statusEmoji = pr.BuildStatus switch
-                {
-                    "success" => "✅",
-                    "failure" => "❌",
-                    "pending" => "⏳",
-                    _ => "❓"
-                };
-                
-                <Markup Content="@($"{statusEmoji} #{pr.Number} - {pr.Title}")" Foreground="@Color.White" />
-                <Markup Content="@($"    {pr.Repo} • {pr.CreatedAt:MMM dd}")" Foreground="@Color.Grey70" />
-            }
-        }
         else if (_loadingPRs)
         {
             <Spinner />
@@ -35,16 +19,58 @@
         }
         else
         {
-            <Markup Content="No open pull requests" Foreground="@Color.Grey" />
+            @if (_pullRequests.Any())
+            {
+                foreach (var pr in _pullRequests)
+                {
+                    var statusEmoji = pr.BuildStatus switch
+                    {
+                        "success" => "✅",
+                        "failure" => "❌",
+                        "pending" => "⏳",
+                        _ => "❓"
+                    };
+                    
+                    <Markup Content="@($"{statusEmoji} #{pr.Number} - {pr.Title}")" Foreground="@Color.White" />
+                    <Markup Content="@($"    {pr.Repo} • {pr.CreatedAt:MMM dd}")" Foreground="@Color.Grey70" />
+                }
+                <Newline />
+            }
+            else
+            {
+                <Markup Content="No open pull requests" Foreground="@Color.Grey" />
+                <Newline />
+            }
+            
+            @* Always show repo load statuses *@
+            @if (_loadStatuses.Any())
+            {
+                <TextButton Content="@(_showDetails ? "▼ Hide Load Details" : "▶ Show Load Details")" 
+                           OnClick="@(() => { _showDetails = !_showDetails; StateHasChanged(); })" />
+                
+                @if (_showDetails)
+                {
+                    <Newline />
+                    <Markup Content="Repo Load Status:" Foreground="@Color.Cyan" Decoration="Decoration.Bold" />
+                    foreach (var status in _loadStatuses)
+                    {
+                        var color = status.Success ? Color.Green : Color.Red;
+                        var emoji = status.Success ? "✅" : "❌";
+                        <Markup Content="@($"{emoji} {status.RepoName}: {status.Message}")" Foreground="@color" />
+                    }
+                }
+            }
         }
     </Rows>
 </Panel>
 
 @code {
     private List<PullRequest> _pullRequests = new();
+    private List<PRLoadStatus> _loadStatuses = new();
     private bool _loadingPRs = false;
     private bool _isGitHubAuthenticated = false;
     private bool _disposed = false;
+    private bool _showDetails = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,18 +91,17 @@
         
         try
         {
-            Console.WriteLine("Loading pull requests...");
-            _pullRequests = await GitHubService.GetMyOpenPullRequests();
-            Console.WriteLine($"Loaded {_pullRequests.Count} pull requests");
-            
-            foreach (var pr in _pullRequests)
-            {
-                Console.WriteLine($"PR: {pr.Title} - {pr.BuildStatus}");
-            }
+            // This will use cached data if available
+            (_pullRequests, _loadStatuses) = await GitHubService.GetMyOpenPullRequests();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading pull requests: {ex.Message}");
+            _loadStatuses.Add(new PRLoadStatus
+            {
+                RepoName = "System",
+                Success = false,
+                Message = $"Error: {ex.Message}"
+            });
         }
         finally
         {

@@ -12,3 +12,10 @@ public class PullRequest
     public string BuildStatus { get; set; } = "unknown"; // success, failure, pending, unknown
     public DateTime CreatedAt { get; set; }
 }
+
+public class PRLoadStatus
+{
+    public string RepoName { get; set; } = "";
+    public bool Success { get; set; }
+    public string Message { get; set; } = "";
+}

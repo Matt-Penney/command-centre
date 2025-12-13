@@ -51,7 +51,7 @@
             await LoadSingleRepoStatus(repo);
             await InvokeAsync(StateHasChanged);
             
-            await Task.Delay(500); // Small delay to prevent overwhelming
+            await Task.Delay(100); // Small delay to prevent overwhelming
         }
     }
 
