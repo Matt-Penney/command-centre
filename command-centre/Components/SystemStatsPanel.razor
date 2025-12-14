@@ -65,8 +65,8 @@
             }
 
             // Get temperature
-            <!-- @* _temperature = await RunBashCommand("osx-cpu-temp | awk '{print $1}' | sed 's/°C//'"); *@
-            _temperature = "N/A"; // Placeholder as osx-cpu-temp is not be installed -->
+            // _temperature = await RunBashCommand("osx-cpu-temp | awk '{print $1}' | sed 's/°C//'");
+            _temperature = "N/A"; // Placeholder as osx-cpu-temp is not be installed / windows alternative needed
 
             // Get uptime
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);

@@ -85,7 +85,6 @@ public class GitHubService
         catch (Exception ex)
         {
             Console.WriteLine($"Error checking GitHub auth: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             return false;
         }
     }
