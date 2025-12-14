@@ -45,7 +45,7 @@
                                 {
                                     <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
                                 }
-                                @if (selectedRepo.IsActive == true)
+                                else if (selectedRepo.IsActive == true)
                                 {
                                     <TextButton Content="▶️ IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
                                     <TextButton Content="📑 Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
