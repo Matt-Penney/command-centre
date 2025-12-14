@@ -11,8 +11,7 @@ public class RepoService
     
     public RepoService()
     {
-        var projectDirectory = Directory.GetCurrentDirectory();
-        _configPath = Path.Combine(projectDirectory, "repos.json");
+        _configPath = Path.Combine(Directory.GetCurrentDirectory(), "repos.json");
 
         _repos = LoadRepos();
     }
@@ -53,7 +52,7 @@ public class RepoService
             if (File.Exists(_configPath))
             {
                 var json = File.ReadAllText(_configPath);
-                return JsonSerializer.Deserialize<List<RepoInfo>>(json) ?? GetDefaultRepos();
+                return JsonSerializer.Deserialize<List<RepoInfo>>(json) ?? new List<RepoInfo>();
             }
         }
         catch (Exception ex)
@@ -61,10 +60,7 @@ public class RepoService
             Console.WriteLine($"Error loading repos config: {ex.Message}");
         }
         
-        // Create default config if it doesn't exist
-        var defaultRepos = GetDefaultRepos();
-        SaveRepos(defaultRepos);
-        return defaultRepos;
+        return new List<RepoInfo>();
     }
     
     private void SaveRepos(List<RepoInfo>? repos = null)
@@ -188,18 +184,5 @@ public class RepoService
         };
         process.Start();
         process.WaitForExit();
-    }
-    
-    private List<RepoInfo> GetDefaultRepos()
-    {
-        return new List<RepoInfo>
-        {
-            new RepoInfo { Name = "customer-portal", Path = "/Users/matthewpenney/repos/customer-portal", Type = "wsl" },
-            new RepoInfo { Name = "devops", Path = "/Users/matthewpenney/devops", Type = "code" },
-            new RepoInfo { Name = "infrastructure", Path = "/Users/matthewpenney/repos/infrastructure", Type = "code" },
-            new RepoInfo { Name = "ignite-portal", Path = "/Users/matthewpenney/repos/ignite-portal", Type = "code" },
-            new RepoInfo { Name = "ignite", Path = "/Users/matthewpenney/repos/ignite", Type = "code" },
-            new RepoInfo { Name = "portfolio", Path = "/Users/matthewpenney/repos/portfolio", Type = "code" }
-        };
     }
 }

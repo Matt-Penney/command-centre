@@ -16,7 +16,7 @@ public class GitHubService
         _repoService = repoService;
     }
 
-    public async Task<bool> IsAuthenticated()
+    public async Task<bool> CheckAuthenicationStatus()
     {
         try
         {
@@ -93,11 +93,9 @@ public class GitHubService
 
             var fullOutput = output + error;
 
-            var isAuthenticated = fullOutput.Contains("Logged in") ||
+            return fullOutput.Contains("Logged in") ||
                                   fullOutput.Contains("✓") ||
                                   authProcess.ExitCode == 0;
-
-            return isAuthenticated;
         }
         catch (Exception ex)
         {
@@ -254,7 +252,7 @@ public class GitHubService
             {
                 RepoName = repo.Name,
                 Success = true,
-                Message = $"Loaded {prData.Count} PR(s)"
+                Message = $"Loaded {prs.Count} PR(s)"
             });
         }
         catch (Exception ex)

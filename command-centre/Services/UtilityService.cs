@@ -11,8 +11,7 @@ public class UtilityService
 
     public UtilityService()
     {
-        var projectDirectory = Directory.GetCurrentDirectory();
-        _configPath = Path.Combine(projectDirectory, "utilities.json");
+        _configPath = Path.Combine(Directory.GetCurrentDirectory(), "utilities.json");
 
         _utilities = LoadUtilities();
     }
@@ -70,7 +69,7 @@ public class UtilityService
                 };
                 process.Start();
                 process.WaitForExit();
-                return (process.ExitCode == 0, "No output captured when running as admin", "");
+                return (process.ExitCode == 0, "No output captured when running as admin", string.Empty);
             }
             else
             {

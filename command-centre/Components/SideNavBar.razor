@@ -4,14 +4,14 @@
 @inject NavigationManager Nav
 
 <Select Options="@(_tabs.Select(t => t.Label).ToArray())"
-    Value="@SelectedTab"
-    ValueChanged="@SelectTab"
-    IsFocused="@IsFocused"
-    IsFocusedChanged="@OnSelectFocusChanged"
-    Expand="false"/>
+        Value="@SelectedTab"
+        ValueChanged="@SelectTab"
+        IsFocused="@IsFocused"
+        IsFocusedChanged="@OnSelectFocusChanged"
+        Expand="false"/>
 
 @code {
-    private string SelectedTab = "home";
+    private string SelectedTab = "Home";
     private readonly (string Key, string Label)[] _tabs = new[]
     {
         ("home", "Home"),

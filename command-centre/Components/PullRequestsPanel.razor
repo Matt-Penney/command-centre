@@ -1,12 +1,14 @@
 @namespace CommandCentre.Components
 @using CommandCentre.Models
 @using CommandCentre.Services
+@using CommandCentre.Data
 @implements IDisposable
 @inject GitHubService GitHubService
+@inject Data.GlobalState GlobalState
 
 <Panel Title="🔀 My Open PRs" BorderColor="@Color.Magenta">
     <Rows>
-        @if (!_isGitHubAuthenticated)
+        @if (GlobalState.IsGitHubAuthenticated != true)
         {
             <Markup Content="⚠️  GitHub CLI not authenticated" Foreground="@Color.Yellow" />
             <Markup Content="Install: brew install gh" Foreground="@Color.Grey" />
@@ -69,24 +71,30 @@
     private List<PullRequest> _pullRequests = new();
     private List<PRLoadStatus> _loadStatuses = new();
     private bool _loadingPRs = false;
-    private bool _isGitHubAuthenticated = false;
     private bool _disposed = false;
     private bool _showDetails = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // _isGitHubAuthenticated = await GitHubService.IsAuthenticated();
-        _isGitHubAuthenticated = true; // temp fix for rendering issue
+        GlobalState.OnChange += StateHasChanged;
+        
+        // Check GitHub authentication status on first init
+        if (GlobalState.IsGitHubAuthenticated == null)
+        {
+            bool result = await GitHubService.CheckAuthenicationStatus();
+            GlobalState.SetGitHubAuthenticated(result);
+        }
 
-        if (_isGitHubAuthenticated)
+        if (GlobalState.IsGitHubAuthenticated.Value)
         {
             await LoadPullRequests();
+            return;
         }
     }
 
     private async Task LoadPullRequests()
     {
-        if (!_isGitHubAuthenticated || _disposed) return;
+        if (_disposed) return;
         
         _loadingPRs = true;
         await InvokeAsync(StateHasChanged);
@@ -114,5 +122,6 @@
     public void Dispose()
     {
         _disposed = true;
+        GlobalState.OnChange -= StateHasChanged;
     }
 }
