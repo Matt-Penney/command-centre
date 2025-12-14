@@ -6,11 +6,15 @@ namespace CommandCentre.Services;
 
 public class UtilityService
 {
+    private readonly CommandService _commandService;
+
     private readonly string _configPath;
     private List<UtilityScript> _utilities = new();
 
-    public UtilityService()
+    public UtilityService(CommandService commandService)
     {
+        _commandService = commandService;
+
         _configPath = Path.Combine(Directory.GetCurrentDirectory(), "utilities.json");
 
         _utilities = LoadUtilities();
@@ -38,7 +42,7 @@ public class UtilityService
 
     public UtilityScript? GetByName(string name) =>_utilities.FirstOrDefault(u => u.Name == name);
 
-    public async Task<(bool Success, string Output, string Error)> ExecuteUtility(UtilityScript utility)
+    public async Task<(bool successResult, string outputResult, string errorResult)> ExecuteUtility(UtilityScript utility)
     {
         try
         {
@@ -58,43 +62,33 @@ public class UtilityService
 
             if (OperatingSystem.IsWindows() && utility.RequiresAdmin)
             {
-                var process = new Process
+                CommandInfo commandInfo = new CommandInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = shell,
-                        Arguments = shellArgs,
-                        UseShellExecute = true,
-                        Verb = "runas",
-                        CreateNoWindow = false
-                    }
+                    fileName = shell,
+                    arguments = shellArgs,
+                    useShellExecute = true,
+                    redirectStandardOutput = false,
+                    redirectStandardError = false,
+                    createNoWindow = false,
+                    verb = "runas"
                 };
-                process.Start();
-                process.WaitForExit();
-                return (process.ExitCode == 0, "No output captured when running as admin", string.Empty);
+                var (adminOutput, adminError, adminExitCode) = await _commandService.RunCommand(commandInfo);
+
+                return (adminExitCode == 0, "No output captured when running as admin", string.Empty);
             }
             else
             {
-                // Normal execution, capture output
-                var process = new Process
+                CommandInfo commandInfo = new CommandInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = shell,
-                        Arguments = shellArgs,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true
-                    }
+                    fileName = shell,
+                    arguments = shellArgs,
+                    useShellExecute = false,
+                    redirectStandardOutput = true,
+                    redirectStandardError = true,
+                    createNoWindow = true
                 };
-
-                process.Start();
-                var output = await process.StandardOutput.ReadToEndAsync();
-                var error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                return (process.ExitCode == 0, output, error);
+                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+                return (exitCode == 0, output, error);
             }
         }
         catch (Exception ex)

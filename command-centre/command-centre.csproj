@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <WarningLevel>0</WarningLevel> <!-- Suppress all warnings in build log-->
   </PropertyGroup>
 
   <ItemGroup>

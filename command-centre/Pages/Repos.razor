@@ -1,7 +1,5 @@
 @page "/repos"
 @using System.Diagnostics
-@using CommandCentre.Models
-@using CommandCentre.Services
 @inject RepoService RepoService
 @inject GitHubService GitHubService
 
@@ -106,7 +104,7 @@
         return RepoService.GetFilteredRepos(searchQuery);
     }
 
-    private async Task OpenToIde(RepoInfo repo)
+    private void OpenToIde(RepoInfo repo)
     {
         // To Do: refactor repoService
         RepoService.OpenToIDE(repo);

@@ -1,8 +1,6 @@
 @page "/"
 @page "/home"
 @using System.Diagnostics
-@using CommandCentre.Models
-@using CommandCentre.Services
 @using CommandCentre.Components
 @inject RepoService RepoService
 @inject NavigationManager Navigation
@@ -78,27 +76,22 @@
 
         if (!_disposed) await InvokeAsync(StateHasChanged);
     }
-    
+
     private void HandleQuickSearch()
     {
         if (string.IsNullOrWhiteSpace(_searchQuery)) return;
 
         var matches = RepoService.GetFilteredRepos(_searchQuery);
-        
+
         if (matches.Count == 1)
         {
             var success = RepoService.OpenToIDE(matches[0]);
 
             if (!success)
             {
-                if (matches[0].IsActive == false)
-                {
-                    _searchError = $"Error: Repo '{matches[0].Name}' is inactive.";
-                }
-                else
-                {
-                    _searchError = $"Error: Opening repo '{matches[0].Name}'' failed.";
-                }
+                _searchError = matches[0].IsActive == false
+                    ? $"Error: Repo '{matches[0].Name}' is inactive."
+                    : $"Error: Opening repo '{matches[0].Name}'' failed.";
             }
             
             _searchQuery = "";

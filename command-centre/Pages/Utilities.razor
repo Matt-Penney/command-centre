@@ -1,7 +1,5 @@
 @page "/utilities"
 @using System.Diagnostics
-@using CommandCentre.Models
-@using CommandCentre.Services
 @inject UtilityService UtilityService
 
 <Panel Title="🛠️ Utilities" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
@@ -127,7 +125,7 @@
 
         _isExecuting = false;
         _output = output;
-        _error = error;
+        _error = success ? string.Empty : error;
         StateHasChanged();
     }
 

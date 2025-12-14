@@ -1,9 +1,8 @@
 @namespace CommandCentre.Components
 @using System.Diagnostics
-@using CommandCentre.Models
-@using CommandCentre.Services
 @implements IDisposable
 @inject RepoService RepoService
+@inject CommandService CommandService
 
 <Panel Title="🔀 Git Changes Status" BorderColor="@Color.Green" Width="25">
     <Rows>
@@ -129,22 +128,17 @@
             arguments = $"-c \"{command}\"";
         }
 
-        using var process = new Process
+        CommandInfo commandInfo = new CommandInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+            fileName = fileName,
+            arguments = arguments,
+            useShellExecute = false,
+            redirectStandardOutput = true,
+            redirectStandardError = true,
+            createNoWindow = true
         };
-        process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        var (output, error, exitCode) = await CommandService.RunAsyncCommand(commandInfo);
+
         return string.IsNullOrWhiteSpace(output) ? error.Trim() : output.Trim();
     }
 

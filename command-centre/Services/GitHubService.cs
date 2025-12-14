@@ -7,13 +7,15 @@ namespace CommandCentre.Services;
 public class GitHubService
 {
     private readonly RepoService _repoService;
+    private readonly CommandService _commandService;
 
     private List<PullRequest> allPRs = new List<PullRequest>();
     private List<PRLoadStatus> statuses = new List<PRLoadStatus>();
 
-    public GitHubService(RepoService repoService)
+    public GitHubService(RepoService repoService, CommandService commandService)
     {
         _repoService = repoService;
+        _commandService = commandService;
     }
 
     public async Task<bool> CheckAuthenicationStatus()
@@ -21,81 +23,64 @@ public class GitHubService
         try
         {
             // First check if gh is installed (cross-platform)
-            string ghPath = "";
+            string ghPath = string.Empty;
             if (OperatingSystem.IsWindows())
             {
-                // Use 'where' command on Windows
-                var process = new Process
+                CommandInfo commandInfo = new CommandInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = "/C where gh",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true
-                    }
+                    fileName = "cmd.exe",
+                    arguments = "/C where gh",
+                    useShellExecute = false,
+                    redirectStandardOutput = true,
+                    redirectStandardError = true,
+                    createNoWindow = true
                 };
-                process.Start();
-                var whichOutput = await process.StandardOutput.ReadToEndAsync();
-                await process.WaitForExitAsync();
-                if (string.IsNullOrWhiteSpace(whichOutput))
+                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+
+                if (string.IsNullOrWhiteSpace(output))
                 {
-                    Console.WriteLine("GitHub CLI (gh) is not installed");
+                    // Console.WriteLine("GitHub CLI (gh) is not installed");
                     return false;
                 }
-                ghPath = whichOutput.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "gh";
+                ghPath = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "gh";
             }
             else
             {
-                // Use 'which' command on Unix
-                var process = new Process
+                CommandInfo commandInfo = new CommandInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "/bin/bash",
-                        Arguments = "-c \"which gh\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true
-                    }
+                    fileName = "/bin/bash",
+                    arguments = "-c \"which gh\"",
+                    useShellExecute = false,
+                    redirectStandardOutput = true,
+                    redirectStandardError = true,
+                    createNoWindow = true
                 };
-                process.Start();
-                var whichOutput = await process.StandardOutput.ReadToEndAsync();
-                await process.WaitForExitAsync();
-                if (string.IsNullOrWhiteSpace(whichOutput))
+                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+
+                if (string.IsNullOrWhiteSpace(output))
                 {
-                    Console.WriteLine("GitHub CLI (gh) is not installed");
+                    // Console.WriteLine("GitHub CLI (gh) is not installed");
                     return false;
                 }
-                ghPath = whichOutput.Trim();
+                ghPath = output.Trim();
             }
 
-            var authProcess = new Process
+            CommandInfo authCommandInfo = new CommandInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = ghPath,
-                    Arguments = "auth status",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
+                fileName = ghPath,
+                arguments = "auth status",
+                useShellExecute = false,
+                redirectStandardOutput = true,
+                redirectStandardError = true,
+                createNoWindow = true
             };
+            var (outputResult, errorResult, authExitCode) = await _commandService.RunAsyncCommand(authCommandInfo);
 
-            authProcess.Start();
-            var output = await authProcess.StandardOutput.ReadToEndAsync();
-            var error = await authProcess.StandardError.ReadToEndAsync();
-            await authProcess.WaitForExitAsync();
-
-            var fullOutput = output + error;
+            var fullOutput = outputResult + errorResult;
 
             return fullOutput.Contains("Logged in") ||
                                   fullOutput.Contains("✓") ||
-                                  authProcess.ExitCode == 0;
+                                  authExitCode == 0;
         }
         catch (Exception ex)
         {
@@ -318,22 +303,16 @@ public class GitHubService
     {
         try
         {
-            var process = new Process
+            CommandInfo commandInfo = new CommandInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = command,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
+                fileName = command,
+                arguments = arguments,
+                useShellExecute = false,
+                redirectStandardOutput = true,
+                redirectStandardError = true,
+                createNoWindow = true
             };
-
-            process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
 
             return output.Trim();
         }
