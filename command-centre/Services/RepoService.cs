@@ -20,6 +20,8 @@ public class RepoService
 
     public List<RepoInfo> GetAllActiveRepos() => _repos.Where(r => r.IsActive.HasValue && r.IsActive.Value).ToList();
     
+    public List<RepoInfo> GetFilteredRepos(string query) => _repos.Where(r => r.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+
     public RepoInfo? GetByName(string name) => _repos.FirstOrDefault(r => r.Name == name);
     
     public RepoInfo? GetRepoByPath(string path) => _repos.FirstOrDefault(r => r.Path == path);

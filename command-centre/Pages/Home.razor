@@ -83,7 +83,7 @@
     {
         if (string.IsNullOrWhiteSpace(_searchQuery)) return;
 
-        var matches = _repos.Where(r => r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+        var matches = RepoService.GetFilteredRepos(_searchQuery);
         
         if (matches.Count == 1)
         {
@@ -91,16 +91,25 @@
 
             if (!success)
             {
-                _searchError = $"Error opening repo: {matches[0].Name}";
-                StateHasChanged();
-                return;
+                if (matches[0].IsActive == false)
+                {
+                    _searchError = $"Error: Repo '{matches[0].Name}' is inactive.";
+                }
+                else
+                {
+                    _searchError = $"Error: Opening repo '{matches[0].Name}'' failed.";
+                }
             }
             
             _searchQuery = "";
         }
-        else if (matches.Any())
+        else if (matches.Count > 1)
         {
-            Navigation.NavigateTo("/repos");
+            _searchError = $"Error: Multiple repos found matching '{_searchQuery}'. Please refine your search.";
+        }
+        else
+        {
+            _searchError = $"Error: No repos found matching '{_searchQuery}'.";
         }
         
         StateHasChanged();

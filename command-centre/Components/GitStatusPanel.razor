@@ -78,8 +78,7 @@
             { 
                 Name = repo.Name, 
                 HasChanges = false, 
-                ChangeCount = 0,
-                IsLoading = false 
+                ChangeCount = 0
             };
             
             if (!_disposed)
@@ -101,13 +100,16 @@
             Name = repo.Name,
             HasChanges = hasChanges,
             ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0,
-            IsLoading = false
+            IsLoading = false,
+            IsActive = RepoService.HasActiveDirectory(repo)
         };
     }
 
     private string GetGitStatusMarkup(RepoStatus status)
     {
         if (status.IsLoading) return "⏳";
+        else if (!status.IsActive) return "❓";
+
         return status.HasChanges ? "🚨" : "✅";
     }
 
@@ -153,9 +155,10 @@
 
     private class RepoStatus
     {
-        public string Name { get; set; } = "";
+        public string Name { get; set; }
         public bool HasChanges { get; set; }
         public int ChangeCount { get; set; }
         public bool IsLoading { get; set; } = false;
+        public bool IsActive { get; set; } = false;
     }
 }

@@ -18,7 +18,7 @@
                 <Newline />
 
                 <Select Options="@GetFilteredUtilities().Select(u => $"{u.Name}").ToArray()"
-                        Value="@_selectedUtility"
+                        Value="@selectedUtility?.Name"
                         ValueChanged="@SelectUtility" />
 
                 @if (!GetFilteredUtilities().Any())
@@ -27,35 +27,33 @@
                     <Markup Content="No utilities match your search" Foreground="@Color.Red" />
                 }
             </Rows>
-            @if (!string.IsNullOrEmpty(_selectedUtility))
-            {
-                var utility = GetSelectedUtility();
-                if (utility != null)
-                {
-                    <Rows>
-                        <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
-                        <Newline />
 
-                        <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
-                            <Rows>
-                                <Markup Content="@utility.Description" Foreground="@Color.Grey" />
-                                <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
-                                <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
-                                @if (utility.RequiresConfirmation)
-                                {
-                                    <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
-                                }
-                            </Rows>
-                        </Panel>
-                        <Newline />
-                        
-                        <Columns>
-                            <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
-                            <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
-                        </Columns>
-                    </Rows>
-                }
+            @if (selectedUtility != null)
+            {
+                <Rows>
+                    <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
+                    <Newline />
+
+                    <Panel Title="@($"ℹ️ {selectedUtility.Name}")" BorderColor="@Color.Cyan">
+                        <Rows>
+                            <Markup Content="@selectedUtility.Description" Foreground="@Color.Grey" />
+                            <Markup Content="@($"Command: {selectedUtility.Command}")" Foreground="@Color.Grey70" />
+                            <Markup Content="@($"Type: {selectedUtility.Type}")" Foreground="@Color.Grey70" />
+                            @if (selectedUtility.RequiresConfirmation)
+                            {
+                                <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
+                            }
+                        </Rows>
+                    </Panel>
+                    <Newline />
+                    
+                    <Columns>
+                        <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(selectedUtility))" />
+                        <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
+                    </Columns>
+                </Rows>
             }
+
             @if (_isExecuting || !string.IsNullOrEmpty(_output) || !string.IsNullOrEmpty(_error))
             {
                 <Rows>
@@ -93,7 +91,7 @@
 
 @code {
     private string _searchQuery = "";
-    private string _selectedUtility = "";
+    private UtilityScript selectedUtility = null;
     private List<UtilityScript> _utilities = new();
     private bool _isExecuting = false;
     private string _output = "";
@@ -106,7 +104,13 @@
 
     private void SelectUtility(string utilityName)
     {
-        _selectedUtility = utilityName;
+        var utility = UtilityService.GetByName(utilityName);
+        if (utility == null)
+        {
+            throw new InvalidOperationException($"Utility '{utilityName}' not found.");
+        }
+        
+        selectedUtility = utility;
         _output = "";
         _error = "";
         StateHasChanged();
@@ -129,7 +133,7 @@
 
     private void ClearSelection()
     {
-        _selectedUtility = "";
+        selectedUtility = null;
         _output = "";
         _error = "";
         StateHasChanged();
@@ -144,10 +148,5 @@
             u.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
             u.Description.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
         );
-    }
-
-    private UtilityScript GetSelectedUtility()
-    {
-        return _utilities.First(u => u.Name == _selectedUtility);
     }
 }

@@ -36,6 +36,8 @@ public class UtilityService
 
     public List<UtilityScript> GetAllUtilities() => _utilities;
 
+    public UtilityScript? GetByName(string name) =>_utilities.FirstOrDefault(u => u.Name == name);
+
     public async Task<(bool Success, string Output, string Error)> ExecuteUtility(UtilityScript utility)
     {
         try
