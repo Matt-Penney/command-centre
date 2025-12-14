@@ -4,82 +4,88 @@
 @using CommandCentre.Services
 @inject UtilityService UtilityService
 
-<Rows>
-    <Markup Content="🛠️ Utilities" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
-    <Newline />
+<Panel Title="🛠️ Utilities" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
+    <Padder Padding="@(new (0, 1, 0, 0))">
+        <Columns Expand="true">
+            <Rows>
+                <Markup Content="Available Utilities" Decoration="@Decoration.Bold" />
 
-    <TextInput Placeholder="Search Utilities..." 
-               Value="@_searchQuery" 
-               ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-               IsFocused="true"
-               FocusedColor="@Color.Blue" />
-    <Newline />
+                <TextInput Placeholder="Search Utilities..." 
+                        Value="@_searchQuery" 
+                        ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+                        FocusedColor="@Color.Blue" />
+                <Newline />
 
-    <Select Options="@GetFilteredUtilities().Select(u => $"🛠️ {u.Name}").ToArray()"
-            Value="@_selectedUtility"
-            ValueChanged="@SelectUtility"
-            IsFocused="true"
-            Expand="true" />
+                <Select Options="@GetFilteredUtilities().Select(u => $"{u.Name}").ToArray()"
+                        Value="@_selectedUtility"
+                        ValueChanged="@SelectUtility" />
 
-    @if (!GetFilteredUtilities().Any())
-    {
-        <Markup Content="No utilities match your search" Foreground="@Color.Red" />
-    }
-    
-    <Newline />
-
-    @if (!string.IsNullOrEmpty(_selectedUtility))
-    {
-        var utility = GetSelectedUtility();
-        if (utility != null)
-        {
-            <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
+                @if (!GetFilteredUtilities().Any())
+                {
+                    <Nelwine />
+                    <Markup Content="No utilities match your search" Foreground="@Color.Red" />
+                }
+            </Rows>
+            @if (!string.IsNullOrEmpty(_selectedUtility))
+            {
                 <Rows>
-                    <Markup Content="@utility.Description" Foreground="@Color.Grey" />
-                    <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
-                    <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
-                    @if (utility.RequiresConfirmation)
+                    <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
+                    @if (!string.IsNullOrEmpty(_selectedUtility))
                     {
-                        <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
+                        var utility = GetSelectedUtility();
+                        if (utility != null)
+                        {
+                            <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
+                                <Rows>
+                                    <Markup Content="@utility.Description" Foreground="@Color.Grey" />
+                                    <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
+                                    <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
+                                    @if (utility.RequiresConfirmation)
+                                    {
+                                        <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
+                                    }
+                                </Rows>
+                            </Panel>
+                            <Newline />
+                            
+                            <Columns>
+                                <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
+                                <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
+                            </Columns>
+                        }
                     }
                 </Rows>
-            </Panel>
-            <Newline />
-            
-            <Columns>
-                <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
-                <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
-            </Columns>
-            <Newline />
-        }
-    }
+            }
+            @if (_isExecuting || !string.IsNullOrEmpty(_output) || !string.IsNullOrEmpty(_error))
+            {
+                <Rows>
+                    <Markup Content="Result:" Decoration="@Decoration.Bold" />
+                    @if (_isExecuting)
+                    {
+                        <Spinner />
+                        <Markup Content="Executing..." Foreground="@Color.Yellow" />
+                        <Newline />
+                    }
 
-    @if (_isExecuting)
-    {
-        <Spinner />
-        <Markup Content="Executing..." Foreground="@Color.Yellow" />
-        <Newline />
-    }
+                    @if (!string.IsNullOrEmpty(_output))
+                    {
+                        <Panel Title="📋 Output" BorderColor="@Color.Green">
+                            <Markup Content="@_output" />
+                        </Panel>
+                        <Newline />
+                    }
 
-    @if (!string.IsNullOrEmpty(_output))
-    {
-        <Panel Title="📋 Output" BorderColor="@Color.Green">
-            <Markup Content="@_output" />
-        </Panel>
-        <Newline />
-    }
-
-    @if (!string.IsNullOrEmpty(_error))
-    {
-        <Panel Title="❌ Error" BorderColor="@Color.Red">
-            <Markup Content="@_error" Foreground="@Color.Red" />
-        </Panel>
-        <Newline />
-    }
-</Rows>
-
-<Markup Content="@($"Selected Utility: {_selectedUtility}")" Foreground="@Color.Grey70" />
-<Markup Content="@($"Total utilities loaded: {_utilities.Count}")" Foreground="@Color.Grey70" />
+                    @if (!string.IsNullOrEmpty(_error))
+                    {
+                        <Panel Title="❌ Error" BorderColor="@Color.Red">
+                            <Markup Content="@_error" Foreground="@Color.Red" />
+                        </Panel>
+                    }
+                </Rows>
+            }
+        </Columns>
+    </Padder>
+</Panel>
 
 @code {
     private string _searchQuery = "";
@@ -96,8 +102,6 @@
 
     private void SelectUtility(string utilityName)
     {
-        utilityName = utilityName.TrimStart("🛠️ ".ToCharArray());
-
         _selectedUtility = utilityName;
         _output = "";
         _error = "";
@@ -116,7 +120,6 @@
         _isExecuting = false;
         _output = output;
         _error = error;
-        _selectedUtility = "";
         StateHasChanged();
     }
 
