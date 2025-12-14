@@ -41,9 +41,16 @@
 
                             <Markup Content="Open with:" Decoration="@Decoration.Underline" />
                             <Rows>
-                                <TextButton Content="▶️ IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
-                                <TextButton Content="📑 Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
-                                <TextButton Content="🗂️ Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
+                                @if (selectedRepo.IsActive != true)
+                                {
+                                    <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
+                                }
+                                @if (selectedRepo.IsActive == true)
+                                {
+                                    <TextButton Content="▶️ IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
+                                    <TextButton Content="📑 Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
+                                    <TextButton Content="🗂️ Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
+                                }
                             </Rows>
                         </Rows>
                     </Panel>
@@ -124,7 +131,17 @@
     }
     private async Task OpenToFolder(RepoInfo repo)
     {
-        @* ToDo implement open to folder directory *@
+        if (OperatingSystem.IsMacOS())
+        {
+            System.Diagnostics.Process.Start("open", repo.Path);
+            return;
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            System.Diagnostics.Process.Start("explorer.exe", repo.Path);
+            return;
+        }
+
         return;
     }
 }
