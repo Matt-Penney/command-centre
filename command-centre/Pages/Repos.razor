@@ -3,6 +3,7 @@
 @using CommandCentre.Models
 @using CommandCentre.Services
 @inject RepoService RepoService
+@inject GitHubService GitHubService
 
 <Panel Title="📁 Repositories" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
     <Padder Padding="@(new (0, 1, 0, 0))">
@@ -113,7 +114,14 @@
     }
     private async Task OpenToBrowser(RepoInfo repo)
     {
-        @* ToDo implement open to browser *@
+        var url = await GitHubService.GetRepoBrowserUrl(repo);  
+        
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true
+        });
+
         return;
     }
     private async Task OpenToFolder(RepoInfo repo)

@@ -343,6 +343,19 @@ public class GitHubService
         }
     }
 
+    public async Task<string> GetRepoBrowserUrl(RepoInfo repo)
+    {
+        var remoteUrl = await RunGitCommand(repo.Path, "config --get remote.origin.url");
+
+        // temp fix for wsl and customer-portal
+        if (repo.Name == "customer-portal" && repo.Type == "wsl")
+        {
+            remoteUrl = await RunGitCommand("C://Repos//customer-portal", "config --get remote.origin.url");
+        }
+        return remoteUrl.Replace(".git", "");
+        // gh search repos --match name "customer-portal" --owner "ignite-systems" --json url;
+    }
+
     private class GitHubPR
     {
         public int number { get; set; }
