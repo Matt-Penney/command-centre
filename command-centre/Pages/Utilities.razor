@@ -9,11 +9,12 @@
         <Columns Expand="true">
             <Rows>
                 <Markup Content="Available Utilities" Decoration="@Decoration.Bold" />
+                <Newline />
 
                 <TextInput Placeholder="Search Utilities..." 
-                        Value="@_searchQuery" 
-                        ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-                        FocusedColor="@Color.Blue" />
+                           Value="@_searchQuery" 
+                           ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+                           FocusedColor="@Color.Blue" />
                 <Newline />
 
                 <Select Options="@GetFilteredUtilities().Select(u => $"{u.Name}").ToArray()"
@@ -22,48 +23,51 @@
 
                 @if (!GetFilteredUtilities().Any())
                 {
-                    <Nelwine />
+                    <Newline />
                     <Markup Content="No utilities match your search" Foreground="@Color.Red" />
                 }
             </Rows>
             @if (!string.IsNullOrEmpty(_selectedUtility))
             {
-                <Rows>
-                    <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
-                    @if (!string.IsNullOrEmpty(_selectedUtility))
-                    {
-                        var utility = GetSelectedUtility();
-                        if (utility != null)
-                        {
-                            <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
-                                <Rows>
-                                    <Markup Content="@utility.Description" Foreground="@Color.Grey" />
-                                    <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
-                                    <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
-                                    @if (utility.RequiresConfirmation)
-                                    {
-                                        <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
-                                    }
-                                </Rows>
-                            </Panel>
-                            <Newline />
-                            
-                            <Columns>
-                                <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
-                                <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
-                            </Columns>
-                        }
-                    }
-                </Rows>
+                var utility = GetSelectedUtility();
+                if (utility != null)
+                {
+                    <Rows>
+                        <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
+                        <Newline />
+
+                        <Panel Title="@($"ℹ️ {utility.Name}")" BorderColor="@Color.Cyan">
+                            <Rows>
+                                <Markup Content="@utility.Description" Foreground="@Color.Grey" />
+                                <Markup Content="@($"Command: {utility.Command}")" Foreground="@Color.Grey70" />
+                                <Markup Content="@($"Type: {utility.Type}")" Foreground="@Color.Grey70" />
+                                @if (utility.RequiresConfirmation)
+                                {
+                                    <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
+                                }
+                            </Rows>
+                        </Panel>
+                        <Newline />
+                        
+                        <Columns>
+                            <TextButton Content="▶️ Execute" OnClick="@(() => ExecuteUtility(utility))" />
+                            <TextButton Content="❌ Cancel" OnClick="@ClearSelection" />
+                        </Columns>
+                    </Rows>
+                }
             }
             @if (_isExecuting || !string.IsNullOrEmpty(_output) || !string.IsNullOrEmpty(_error))
             {
                 <Rows>
                     <Markup Content="Result:" Decoration="@Decoration.Bold" />
+                    <Newline />
+
                     @if (_isExecuting)
                     {
-                        <Spinner />
-                        <Markup Content="Executing..." Foreground="@Color.Yellow" />
+                        <Columns>
+                            <Spinner />
+                            <Markup Content="Executing..." Foreground="@Color.Yellow" />
+                        </Columns>
                         <Newline />
                     }
 

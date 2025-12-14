@@ -142,13 +142,13 @@ public class GitHubService
         var prs = new List<PullRequest>();
         
         // Check if repo path exists
-        if (!System.IO.Directory.Exists(repo.Path) && repo.Type != "wsl") // wsl repos may use ~ paths
+        if (!_repoService.HasActiveDirectory(repo) && repo.Type != "wsl") // wsl repos may use ~ paths
         {
             return (prs, new PRLoadStatus
             {
                 RepoName = repo.Name,
                 Success = false,
-                Message = "Repo not active"
+                Message = "No active directory found"
             });
         }
 

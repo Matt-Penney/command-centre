@@ -44,9 +44,9 @@
 
     <Newline />
 
-    <!-- <Columns> -->
-        <!-- <TimeTrackerPanel /> For no obvious reason, this is causing render issues -->
-    <!-- </Columns> -->
+    <Columns>
+        <TimeTrackerPanel /> @*For no obvious reason, this is causing render issues, fixed it seems *@
+    </Columns>
 </Rows>
 
 @code {
@@ -87,7 +87,7 @@
         
         if (matches.Count == 1)
         {
-            var success = RepoService.OpenRepo(matches[0]);
+            var success = RepoService.OpenToIDE(matches[0]);
 
             if (!success)
             {

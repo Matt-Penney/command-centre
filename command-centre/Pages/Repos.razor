@@ -4,49 +4,70 @@
 @using CommandCentre.Services
 @inject RepoService RepoService
 
-<Rows>
-    <Markup Content="📁 Repositories" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
-    <Newline />
+<Panel Title="📁 Repositories" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
+    <Padder Padding="@(new (0, 1, 0, 0))">
+        <Columns Expand="true">
+            <Rows>
+                <Markup Content="Manage your local repos" Decoration="Decoration.Bold" />
+                <Newline />
 
-    <TextInput Placeholder="Search Repositories..." 
-               Value="@searchQuery" 
-               ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
-               OnSubmit="@HandleEnter"
-               FocusedColor="@Color.Blue" />
-    <Newline />
+                <TextInput Placeholder="Search Repositories..." 
+                           Value="@searchQuery" 
+                           ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
+                           FocusedColor="@Color.Blue" />
+                <Newline />
 
-    <Select Options="@GetFilteredRepos().Select(r => $"📁 {r.Name}").ToArray()"
-            Value="@SelectedRepo"
-            ValueChanged="@SelectRepo"
-            OnSelected="@HandleEnter"
-            IsFocused="true"
-            Expand="true" />
+                 <Select Options="@GetFilteredRepos().Select(r => $"{r.Name}").ToArray()"
+                         Value="@selectedRepo?.Name"
+                         ValueChanged="@SelectRepo" />
 
-    @if(!string.IsNullOrEmpty(SelectedRepo))
-    {
-        @* TODO list *@
-        @* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
-            @* gh search commits QUERY --repo repo.name --owner repo.owner ----- something like this, best we got *@
-        @* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
-        @* latest release version (with date created) if releases dont exist then dont show panel *@
-        @* repo health indicators, not 100% on what this is yet, maybe tests *@
-        @* Commit frequency chart (last 30 days) (bar chart) *@
-        @* 2 TextButtons, one to open browser of repo, other to open in File Explorer *@
-        @* maybe move the open repo logic into its own button, grouped with above *@
-    }
+                @if (!GetFilteredRepos().Any())
+                {
+                    <Markup Content="No repos match your search" Foreground="@Color.Red" />
+                }
+            </Rows>
 
-</Rows>
+            @if (selectedRepo != null)
+            {
+                <Rows>
+                    <Markup Content="Selected Repository Details" Decoration="@Decoration.Bold" />
+                    <Newline />
+                
+                    <Panel Title="@($"ℹ️ {selectedRepo.Name}")" BorderColor="@Color.Cyan">
+                        <Rows>
+                            <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive.Value)}")" />
+                            <Markup Content="@($"Path: {selectedRepo.Path}")" Foreground="@Color.Grey70" />
+                            <Markup Content="@($"Type: {selectedRepo.Type}")" Foreground="@Color.Grey70" />
+                            <Newline />
 
-@if (!GetFilteredRepos().Any())
+                            <Markup Content="Open with:" Decoration="@Decoration.Underline" />
+                            <Rows>
+                                <TextButton Content="▶️ IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
+                                <TextButton Content="📑 Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
+                                <TextButton Content="🗂️ Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
+                            </Rows>
+                        </Rows>
+                    </Panel>
+                </Rows>
+            }
+        </Columns>
+    </Padder>
+</Panel>
+
+@if(selectedRepo != null)
 {
-    <Markup Content="No repos match your search" Foreground="@Color.Red" />
+    @* TODO list *@
+    @* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
+        @* gh search commits QUERY --repo repo.name --owner repo.owner ----- something like this, best we got *@
+    @* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
+    @* latest release version (with date created) if releases dont exist then dont show panel *@
+    @* repo health indicators, not 100% on what this is yet, maybe tests *@
+    @* Commit frequency chart (last 30 days) (bar chart) *@
 }
-
-<Markup Content="@($"Selected Repo: {SelectedRepo}")" Foreground="@Color.Grey70" />
 
 @code {
     private string searchQuery = "";
-    private string SelectedRepo = "";
+    private RepoInfo selectedRepo = null;
     private List<RepoInfo> _repos = new();
 
     protected override void OnInitialized()
@@ -54,19 +75,20 @@
         _repos = RepoService.GetAllRepos();
     }
 
+    private string GetActiveStatusMarkup(bool isActive)
+    {
+        return isActive ? "✅" : "❌";
+    }
+
     private void SelectRepo(string repoName)
     {
-        repoName = repoName.TrimStart("📁 ".ToCharArray());
-
-        var repo = _repos.FirstOrDefault(r => r.Name == repoName);
+        var repo = RepoService.GetByName(repoName);
         if (repo == null)
         {
             throw new InvalidOperationException($"Repo '{repoName}' not found.");
         }
-        SelectedRepo = repoName;
+        selectedRepo = repo;
         StateHasChanged();
-
-        RepoService.OpenRepo(repo);
     }
 
     private void UpdateSearch(string value)
@@ -75,26 +97,26 @@
         StateHasChanged();
     }
 
-    private void HandleEnter()
-    {
-        var filtered = GetFilteredRepos().ToList();
-        
-        if (!filtered.Any())
-        {
-            return;
-        }
-
-        if (filtered.Count == 1)
-        {
-            SelectRepo(filtered[0].Name);
-        }
-    }
-
     private IEnumerable<RepoInfo> GetFilteredRepos()
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
             return _repos;
         
         return _repos.Where(r => r.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task OpenToIde(RepoInfo repo)
+    {
+        // To Do: refactor repoService
+        RepoService.OpenToIDE(repo);
+        return;
+    }
+    private async Task OpenToBrowser(RepoInfo repo)
+    {
+        return;
+    }
+    private async Task OpenToFolder(RepoInfo repo)
+    {
+        return;
     }
 }
