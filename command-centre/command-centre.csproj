@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <WarningLevel>0</WarningLevel> <!-- Suppress all warnings in build log-->
+    <ToolCommandName>command-centre</ToolCommandName>x  
   </PropertyGroup>
 
   <ItemGroup>

@@ -15,9 +15,7 @@
         <TextInput Placeholder="🔍 Quick search repos (press Enter)..." 
                    Value="@_searchQuery" 
                    ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-                   OnSubmit="@HandleQuickSearch"
-                   IsFocused="true"
-                   FocusedColor="@Color.Blue" />
+                   OnSubmit="@HandleQuickSearch" />
 
         @if (!string.IsNullOrWhiteSpace(_searchError))
         {
