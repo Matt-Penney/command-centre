@@ -7,15 +7,14 @@ namespace CommandCentre.Services;
 public class GitHubService
 {
     private readonly RepoService _repoService;
-    private readonly CommandService _commandService;
+    private CommandService _commandService = new CommandService();
 
     private List<PullRequest> allPRs = new List<PullRequest>();
     private List<PRLoadStatus> statuses = new List<PRLoadStatus>();
 
-    public GitHubService(RepoService repoService, CommandService commandService)
+    public GitHubService(RepoService repoService)
     {
         _repoService = repoService;
-        _commandService = commandService;
     }
 
     public async Task<bool> CheckAuthenicationStatus()

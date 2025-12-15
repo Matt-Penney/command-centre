@@ -7,15 +7,13 @@ namespace CommandCentre.Services;
 
 public class RepoService
 {
-    private readonly CommandService _commandService;
+    private CommandService _commandService = new CommandService();
 
     private readonly string _configPath;
     private List<RepoInfo> _repos;
     
-    public RepoService(CommandService commandService)
+    public RepoService()
     {
-        _commandService = commandService;
-
         _configPath = Path.Combine(Directory.GetCurrentDirectory(), "repos.json");
 
         _repos = LoadRepos();

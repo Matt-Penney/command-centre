@@ -6,15 +6,13 @@ namespace CommandCentre.Services;
 
 public class UtilityService
 {
-    private readonly CommandService _commandService;
+    private CommandService _commandService = new CommandService();
 
     private readonly string _configPath;
     private List<UtilityScript> _utilities = new();
 
-    public UtilityService(CommandService commandService)
+    public UtilityService()
     {
-        _commandService = commandService;
-
         _configPath = Path.Combine(Directory.GetCurrentDirectory(), "utilities.json");
 
         _utilities = LoadUtilities();

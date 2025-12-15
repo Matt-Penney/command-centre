@@ -14,7 +14,7 @@ builder.UseRazorConsole<App>();
 builder.Services.AddSingleton<RepoService>();
 builder.Services.AddSingleton<UtilityService>();
 builder.Services.AddSingleton<GitHubService>();
-builder.Services.AddSingleton<CommandService>();
+builder.Services.AddTransient<CommandService>();
 
 builder.Services.AddScoped<GlobalState>();
 
