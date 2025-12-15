@@ -32,7 +32,7 @@ public class UtilityService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading utilities: {ex.Message}");
+            // Console.WriteLine($"Error loading utilities: {ex.Message}");
         }
 
         return new List<UtilityScript>();

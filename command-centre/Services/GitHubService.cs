@@ -84,7 +84,7 @@ public class GitHubService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error checking GitHub auth: {ex.Message}");
+            // Console.WriteLine($"Error checking GitHub auth: {ex.Message}");
             return false;
         }
     }
@@ -287,7 +287,7 @@ public class GitHubService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error parsing GitHub URL: {ex.Message}");
+            // Console.WriteLine($"Error parsing GitHub URL: {ex.Message}");
         }
 
         return ("", "");
