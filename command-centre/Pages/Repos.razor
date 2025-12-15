@@ -28,6 +28,7 @@
 
             @if (selectedRepo != null)
             {
+                @* maybe look into FocusOrder and stuff, maybe having the second panel have a lower focus index than the select list, then on appearing it will focus onto the second panel *@
                 <Rows>
                     <Markup Content="Selected Repository Details" Decoration="@Decoration.Bold" />
                     <Newline />
