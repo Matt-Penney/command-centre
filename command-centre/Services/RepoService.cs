@@ -56,7 +56,7 @@ public class RepoService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading repos config: {ex.Message}");
+            // Console.WriteLine($"Error loading repos config: {ex.Message}");
         }
         
         return new List<RepoInfo>();

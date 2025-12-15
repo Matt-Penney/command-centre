@@ -7,7 +7,7 @@
     <Padder Padding="@(new (0, 1, 0, 0))">
         <Columns Expand="true">
             <Rows>
-                <Markup Content="Manage your local repos" Decoration="Decoration.Bold" />
+                <Markup Content="Manage your local repos" Decoration="@Decoration.Bold" />
                 <Newline />
 
                 <TextInput Placeholder="Search Repositories..." 
@@ -33,26 +33,27 @@
                     <Markup Content="Selected Repository Details" Decoration="@Decoration.Bold" />
                     <Newline />
                 
+                    <!-- Causing render issues, just on Windows it seems -->
                     <Panel Title="@($"ℹ️ {selectedRepo.Name}")" BorderColor="@Color.Cyan">
                         <Rows>
-                            <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive.Value)}")" />
+                            <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive)}")" />
                             <Markup Content="@($"Path: {selectedRepo.Path}")" Foreground="@Color.Grey70" />
                             <Markup Content="@($"Type: {selectedRepo.Type}")" Foreground="@Color.Grey70" />
                             <Newline />
 
-                            <Markup Content="Open with:" Decoration="@Decoration.Underline" />
-                            <Rows>
-                                @if (selectedRepo.IsActive != true)
-                                {
-                                    <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
-                                }
-                                else if (selectedRepo.IsActive == true)
-                                {
+                            @if (selectedRepo.IsActive == true || selectedRepo.Type == "wsl")
+                            {   
+                                <Markup Content="Open with:" Decoration="@Decoration.Underline" />
+                                <Rows>
                                     <TextButton Content="▶️ IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
                                     <TextButton Content="📑 Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
                                     <TextButton Content="🗂️ Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
-                                }
-                            </Rows>
+                                </Rows>
+                            }
+                            else
+                            {
+                                <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
+                            }
                         </Rows>
                     </Panel>
                 </Rows>
@@ -61,16 +62,13 @@
     </Padder>
 </Panel>
 
-@if(selectedRepo != null)
-{
-    @* TODO list *@
-    @* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
-        @* gh search commits QUERY --repo repo.name --owner repo.owner ----- something like this, best we got *@
-    @* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
-    @* latest release version (with date created) if releases dont exist then dont show panel *@
-    @* repo health indicators, not 100% on what this is yet, maybe tests *@
-    @* Commit frequency chart (last 30 days) (bar chart) *@
-}
+@* TODO list *@
+@* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
+    @* gh search commits QUERY --repo repo.name --owner repo.owner ----- something like this, best we got *@
+@* CI/CD pipeline status, green or red emoji if red then maybe a link to error / pipeline *@
+@* latest release version (with date created) if releases dont exist then dont show panel *@
+@* repo health indicators, not 100% on what this is yet, maybe tests *@
+@* Commit frequency chart (last 30 days) (bar chart) *@
 
 @code {
     private string searchQuery = "";
@@ -82,9 +80,16 @@
         _repos = RepoService.GetAllRepos();
     }
 
-    private string GetActiveStatusMarkup(bool isActive)
+    private string GetActiveStatusMarkup(bool? isActive)
     {
-        return isActive ? "✅" : "❌";
+        if (isActive == null)
+        {
+            return "❓";
+        }
+        else
+        {
+            return isActive.Value ? "✅" : "❌";
+        }
     }
 
     private void SelectRepo(string repoName)

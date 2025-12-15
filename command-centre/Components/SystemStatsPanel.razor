@@ -41,7 +41,7 @@
         _statsTimer = new System.Timers.Timer(5000);
         _statsTimer.Elapsed += async (s, e) =>
         {
-            if (!_disposed) await LoadSystemStats();
+            await LoadSystemStats();
         };
         _statsTimer.Start();
     }
@@ -52,6 +52,8 @@
 
         try
         {
+            if (OperatingSystem.IsWindows()) return;
+
             // Get CPU usage
             _cpuUsage = !OperatingSystem.IsWindows()
                 ? await RunBashCommand("top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'")
@@ -76,7 +78,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading system stats: {ex.Message}");
+            // Console.WriteLine($"Error loading system stats: {ex.Message}");
         }
     }
     

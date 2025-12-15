@@ -7,7 +7,7 @@
 @implements IDisposable
 
 <Rows>
-    <Markup Content="@($"⚡️ Dashboard - {now}")" Foreground="@Color.Blue" Decoration="Decoration.Bold" />
+    <Markup Content="@($"⚡️ Dashboard - {now}")" Foreground="@Color.Blue" Decoration="@Decoration.Bold" />
     <Newline />
     
     @* Global Search Bar *@
@@ -30,6 +30,8 @@
         <SystemStatsPanel />
         <Newline />
         <TasksPanel />
+        <!-- <Newline /> -->
+        <!-- <TimeTrackerPanel /> Render issues on Windows -->
     </Columns>
 
     <Newline />
@@ -40,11 +42,11 @@
         <PullRequestsPanel />
     </Columns>
 
-    <Newline />
+    <!-- <Newline />
 
     <Columns>
         <TimeTrackerPanel /> @*For no obvious reason, this is causing render issues, fixed it seems *@
-    </Columns>
+    </Columns> -->
 </Rows>
 
 @code {

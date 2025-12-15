@@ -29,9 +29,10 @@
             @if (selectedUtility != null)
             {
                 <Rows>
-                    <Markup Content="Selected Utility" Decoration="@Decoration.Bold" />
+                    <Markup Content="Selected Utility Details" Decoration="@Decoration.Bold" />
                     <Newline />
 
+                    <!-- Causing render issues, just on Windows it seems -->
                     <Panel Title="@($"ℹ️ {selectedUtility.Name}")" BorderColor="@Color.Cyan">
                         <Rows>
                             <Markup Content="@selectedUtility.Description" Foreground="@Color.Grey" />

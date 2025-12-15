@@ -6,9 +6,9 @@
 
 <Panel Title="🔀 My Open PRs" BorderColor="@Color.Magenta">
     <Rows>
-        @if (GlobalState.IsGitHubAuthenticated != true)
+        @if (GlobalState.IsGitHubAuthenticated == false)
         {
-            <Markup Content="⚠️  GitHub CLI not authenticated" Foreground="@Color.Yellow" />
+            <Markup Content="⚠️ GitHub CLI not authenticated" Foreground="@Color.Yellow" />
             <Markup Content="Install: brew install gh" Foreground="@Color.Grey" />
             <Markup Content="Then run: gh auth login" Foreground="@Color.Grey" />
         }
@@ -52,7 +52,7 @@
                 @if (_showDetails)
                 {
                     <Newline />
-                    <Markup Content="Repo Load Status:" Foreground="@Color.Cyan" Decoration="Decoration.Bold" />
+                    <Markup Content="Repo Load Status:" Foreground="@Color.Cyan" Decoration="@Decoration.Bold" />
                     foreach (var status in _loadStatuses)
                     {
                         var color = status.Success ? Color.Green : Color.Red;
@@ -113,7 +113,7 @@
         finally
         {
             _loadingPRs = false;
-            if (!_disposed) await InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
         }
     }
 
