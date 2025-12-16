@@ -8,13 +8,11 @@ public class UtilityService
 {
     private CommandService _commandService = new CommandService();
 
-    private readonly string _configPath;
+    private readonly string _configPath = Path.Combine(Directory.GetCurrentDirectory(), "utilities.json");
     private List<UtilityScript> _utilities = new();
 
     public UtilityService()
     {
-        _configPath = Path.Combine(Directory.GetCurrentDirectory(), "utilities.json");
-
         _utilities = LoadUtilities();
     }
 

@@ -9,13 +9,11 @@ public class RepoService
 {
     private CommandService _commandService = new CommandService();
 
-    private readonly string _configPath;
+    private readonly string _configPath = Path.Combine(Directory.GetCurrentDirectory(), "repos.json");
     private List<RepoInfo> _repos;
     
     public RepoService()
     {
-        _configPath = Path.Combine(Directory.GetCurrentDirectory(), "repos.json");
-
         _repos = LoadRepos();
     }
     
@@ -114,7 +112,6 @@ public class RepoService
                 redirectStandardError = true,
                 createNoWindow = true
             };
-            new CommandService().RunCommand(commandInfo).Wait();
         }
         else
         {
