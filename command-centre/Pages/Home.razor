@@ -18,7 +18,6 @@
                    ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
                    OnSubmit="@HandleQuickSearch" />
 
-        @* ToDO: maybe into Error component, similar item used on Utilities page *@
         <ErrorMessagePanel errorMessage="@_searchError" />
     </Columns>
     <Newline />
@@ -27,8 +26,9 @@
         <SystemStatsPanel />
         <Newline />
         <TasksPanel />
-        <!-- <Newline /> -->
-        <!-- <TimeTrackerPanel /> @*For no obvious reason, this is causing render issues, fixed it seems *@ -->
+        @* <Newline /> *@
+        @*For no obvious reason, this is causing render issues, fixed it seems *@
+        @* <TimeTrackerPanel />  *@
     </Columns>
 
     <Newline />
