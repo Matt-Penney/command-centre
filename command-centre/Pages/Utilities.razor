@@ -42,6 +42,7 @@
                             <Markup Content="@($"Type: {selectedUtility.Type}")" Foreground="@Color.Grey70" />
                             @if (selectedUtility.RequiresConfirmation)
                             {
+                                @* ToDo: add proper confirmation dialogs when trying to execute *@
                                 <Markup Content="⚠️ Requires confirmation" Foreground="@Color.Yellow" />
                             }
                         </Rows>
@@ -69,6 +70,7 @@
                     }
                     else if (!string.IsNullOrEmpty(_error))
                     {
+                        @* ToDo: comment on Home page, make into shared component with prop *@
                         <Panel Title="❌ Error" BorderColor="@Color.Red">
                             <Markup Content="@_error" Foreground="@Color.Red" />
                         </Panel>

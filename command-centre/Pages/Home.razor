@@ -1,7 +1,7 @@
 @page "/"
 @page "/home"
 @using System.Diagnostics
-@using CommandCentre.Components
+@using CommandCentre.Components.Home
 @inject RepoService RepoService
 @inject NavigationManager Navigation
 @implements IDisposable
@@ -11,13 +11,14 @@
     <Newline />
     
     @* Global Search Bar *@
-    <!-- ToDO: windows issue, on successful search it gets stuck, doesnt clear either -->
+    <!-- ToDO: windows issue, on successful search it gets stuck, doesnt clear either, pasas error message as prop -->
     <Columns>
         <TextInput Placeholder="🔍 Quick search repos (press Enter)..." 
                    Value="@_searchQuery" 
                    ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
                    OnSubmit="@HandleQuickSearch" />
 
+        @* ToDO: maybe into Error component, similar item used on Utilities page *@
         @if (!string.IsNullOrWhiteSpace(_searchError))
         {
             <Markup Content="@_searchError" Foreground="@Color.Red" />
@@ -36,15 +37,15 @@
     <Newline />
 
     <Columns>
-        <GitStatusPanel />
+        <GitStatusPanel /> <!-- ToDo: run commands after build rather than before, speed up firt build -->
         <Newline />
-        <PullRequestsPanel />
+        <PullRequestsPanel /> <!-- ToDo: run commands after build rather than before, speed up firt build -->
     </Columns>
 </Rows>
 
 @code {
-    private string _searchQuery = "";
-    private string _searchError = "";
+    private string _searchQuery = string.Empty;
+    private string _searchError = string.Empty;
 
     private string now = DateTime.Now.ToString("HH:mmtt");
     private System.Timers.Timer? _timer;

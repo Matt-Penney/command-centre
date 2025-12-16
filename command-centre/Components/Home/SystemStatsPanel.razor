@@ -1,4 +1,4 @@
-@namespace CommandCentre.Components
+@namespace CommandCentre.Components.Home
 @using System.Diagnostics
 @implements IDisposable
 @inject CommandService CommandService
@@ -109,7 +109,7 @@
                 redirectStandardError = true,
                 createNoWindow = true
             };
-            var (output, error, exitCode) = await CommandService.RunAsyncCommand(commandInfo);
+            var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
 
             return string.IsNullOrWhiteSpace(output) ? error.Trim() : output.Trim();
         }

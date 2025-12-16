@@ -97,7 +97,7 @@ public class RepoService
             redirectStandardError = true,
             createNoWindow = false
         };
-        _commandService.RunCommand(commandInfo).Wait();
+        new CommandService().RunCommand(commandInfo).Wait();
     }
 
     private void OpenInVisualStudioCode(RepoInfo repo)
@@ -114,7 +114,7 @@ public class RepoService
                 redirectStandardError = true,
                 createNoWindow = true
             };
-            _commandService.RunCommand(commandInfo).Wait();
+            new CommandService().RunCommand(commandInfo).Wait();
         }
         else
         {
@@ -128,7 +128,7 @@ public class RepoService
                 createNoWindow = true
             };
         }
-        _commandService.RunCommand(commandInfo).Wait();
+        new CommandService().RunCommand(commandInfo).Wait();
     }
 
     private void OpenInVisualStudio(RepoInfo repo)
@@ -142,6 +142,6 @@ public class RepoService
             redirectStandardError = true,
             createNoWindow = true
         };
-        _commandService.RunCommand(commandInfo).Wait();
+        new CommandService().RunCommand(commandInfo).Wait();
     }
 }

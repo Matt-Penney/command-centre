@@ -70,7 +70,7 @@ public class UtilityService
                     createNoWindow = false,
                     verb = "runas"
                 };
-                var (adminOutput, adminError, adminExitCode) = await _commandService.RunCommand(commandInfo);
+                var (adminOutput, adminError, adminExitCode) = await new CommandService().RunCommand(commandInfo);
 
                 return (adminExitCode == 0, "No output captured when running as admin", string.Empty);
             }
@@ -85,7 +85,7 @@ public class UtilityService
                     redirectStandardError = true,
                     createNoWindow = true
                 };
-                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+                var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
                 return (exitCode == 0, output, error);
             }
         }

@@ -1,4 +1,4 @@
-@namespace CommandCentre.Components
+@namespace CommandCentre.Components.Home
 @using System.Diagnostics
 @implements IDisposable
 @inject RepoService RepoService
@@ -73,7 +73,7 @@
         {
             // Console.WriteLine($"Error checking git status for {repo.Name}: {ex.Message}");
             
-            var errorStatus = new RepoStatus 
+            RepoStatus errorStatus = new RepoStatus 
             { 
                 Name = repo.Name, 
                 HasChanges = false, 
@@ -91,6 +91,7 @@
 
     private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
     {
+        @* ToDo: doesnt fully work, need to look into it really *@
         var output = await RunBashCommand($"cd '{repo.Path}' 2>/dev/null && git status --porcelain 2>/dev/null || echo ''");
         var hasChanges = !string.IsNullOrWhiteSpace(output);
         
@@ -137,7 +138,7 @@
             redirectStandardError = true,
             createNoWindow = true
         };
-        var (output, error, exitCode) = await CommandService.RunAsyncCommand(commandInfo);
+        var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
 
         return string.IsNullOrWhiteSpace(output) ? error.Trim() : output.Trim();
     }

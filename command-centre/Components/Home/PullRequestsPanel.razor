@@ -1,4 +1,4 @@
-@namespace CommandCentre.Components
+@namespace CommandCentre.Components.Home
 @using CommandCentre.Data
 @implements IDisposable
 @inject GitHubService GitHubService
@@ -46,7 +46,7 @@
             
             @if (_loadStatuses.Any())
             {
-                <TextButton Content="@(_showDetails ? "▼ Hide Load Details" : "▶ Show Load Details")" 
+                <TextButton Content="@(_showDetails ? "▼ Hide Details" : "▶ Show Details")" 
                             OnClick="@(() => { _showDetails = !_showDetails; StateHasChanged(); })" />
                 
                 @if (_showDetails)

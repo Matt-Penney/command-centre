@@ -34,7 +34,7 @@ public class GitHubService
                     redirectStandardError = true,
                     createNoWindow = true
                 };
-                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+                var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
 
                 if (string.IsNullOrWhiteSpace(output))
                 {
@@ -54,7 +54,7 @@ public class GitHubService
                     redirectStandardError = true,
                     createNoWindow = true
                 };
-                var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+                var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
 
                 if (string.IsNullOrWhiteSpace(output))
                 {
@@ -73,7 +73,7 @@ public class GitHubService
                 redirectStandardError = true,
                 createNoWindow = true
             };
-            var (outputResult, errorResult, authExitCode) = await _commandService.RunAsyncCommand(authCommandInfo);
+            var (outputResult, errorResult, authExitCode) = await new CommandService().RunAsyncCommand(authCommandInfo);
 
             var fullOutput = outputResult + errorResult;
 
@@ -310,7 +310,7 @@ public class GitHubService
                 redirectStandardError = true,
                 createNoWindow = true
             };
-            var (output, error, exitCode) = await _commandService.RunAsyncCommand(commandInfo);
+            var (output, error, exitCode) = await new CommandService().RunAsyncCommand(commandInfo);
 
             return output.Trim();
         }

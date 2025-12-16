@@ -1,0 +1,20 @@
+@* recent commits list, number of commits in last X days, Show more info button to extend details (like PullRequestPanel) *@
+    @* gh search commits QUERY --repo repo.name --owner repo.owner ----- something like this, best we got *@
+
+@*
+@if (selectedRepo != null)
+{
+    <Panel Title="Recent Commits" BorderColor="@Color.Grey">
+        @foreach (var commit in await GitHubService.GetRecentCommits(selectedRepo))
+        {
+            <Markup Content="@commit.Message" Foreground="@Color.Grey70" />
+            <Markup Content="@($"Author: {commit.Author}")" Foreground="@Color.Grey50" />
+            <Markup Content="@($"Date: {commit.Date}")" Foreground="@Color.Grey50" />
+            <Newline />
+        }
+    </Panel>
+}
+
+ *@
+
+ 
