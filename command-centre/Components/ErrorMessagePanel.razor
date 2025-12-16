@@ -4,7 +4,12 @@
 @* 
 
 <Panel Title="❌ Error" BorderColor="@Color.Red">
-  <Markup Content="@_error" Foreground="@Color.Red" />
+  <Markup Content="@errorMessage" Foreground="@Color.Red" />
 </Panel>
+
+@code {
+    [Parameter]
+    public string ErrorMessage { get; set; }
+}
 
  *@

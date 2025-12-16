@@ -1,2 +1,9 @@
 @* Open to Ide, browser, folder *@
 @* basically the actions that already exist on the repos.razor page *@
+
+@* more ideas continued from the existing 3 on repos.razor page
+<Panel Title="Quick Actions" BorderColor="@Color.Cyan">
+    <TextButton Content="⬇️ Pull Changes" OnClick="@(() => PullChanges(selectedRepo))" />
+    <TextButton Content="⬆️ Push Changes" OnClick="@(() => PushChanges(selectedRepo))" />
+</Panel>
+ *@

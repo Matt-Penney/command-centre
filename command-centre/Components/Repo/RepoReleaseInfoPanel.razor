@@ -1,0 +1,21 @@
+@* latest release version (with date created) if releases dont exist then dont show panel 
+    pass selected Repo as a parameter
+*@
+
+@* 
+
+@if (selectedRepo != null && selectedRepo.HasReleases)
+{
+    <Panel Title="Latest Release" BorderColor="@Color.Green">
+        <Markup Content="@($"Version: {selectedRepo.LatestRelease.Version}")" />
+        <Markup Content="@($"Date: {selectedRepo.LatestRelease.Date}")" />
+        <Markup Content="@($"Notes: {selectedRepo.LatestRelease.Notes}")" />
+    </Panel>
+}
+
+@code {
+    [Parameter]
+    public RepoInfo SelectedRepo { get; }
+}
+
+ *@

@@ -91,7 +91,21 @@
 
     private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
     {
-        @* ToDo: doesnt fully work, need to look into it really *@
+        @* ToDo: doesnt fully work, need to look into it really, maybe change to sync status like below*@
+        <!--
+            private string GetSyncStatus(RepoInfo repo)
+            {
+                var status = GitHubService.GetSyncStatus(repo);
+                return status switch
+                {
+                    SyncStatus.UpToDate => "✅ Up to date",
+                    SyncStatus.Behind => "⬇️ Behind",
+                    SyncStatus.Ahead => "⬆️ Ahead",
+                    _ => "❓ Unknown"
+                };
+            }
+         -->
+
         var output = await RunBashCommand($"cd '{repo.Path}' 2>/dev/null && git status --porcelain 2>/dev/null || echo ''");
         var hasChanges = !string.IsNullOrWhiteSpace(output);
         
