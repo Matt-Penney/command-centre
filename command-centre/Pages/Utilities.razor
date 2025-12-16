@@ -56,7 +56,7 @@
                 </Rows>
             }
 
-            @if (_isExecuting || !string.IsNullOrEmpty(_output) || !string.IsNullOrEmpty(_error))
+            @if (_isExecuting || !string.IsNullOrEmpty(_output))
             {
                 <Rows>
                     <Markup Content="Result:" Decoration="@Decoration.Bold" />
@@ -68,13 +68,6 @@
                             <Markup Content="@_output" />
                         </Panel>
                     }
-                    else if (!string.IsNullOrEmpty(_error))
-                    {
-                        @* ToDo: comment on Home page, make into shared component with prop *@
-                        <Panel Title="❌ Error" BorderColor="@Color.Red">
-                            <Markup Content="@_error" Foreground="@Color.Red" />
-                        </Panel>
-                    }
                     else if (_isExecuting)
                     {
                         <Columns>
@@ -82,6 +75,9 @@
                             <Markup Content="Executing..." Foreground="@Color.Yellow" />
                         </Columns>
                     }
+                    
+                    @* ToDo: comment on Home page, make into shared component with prop *@
+                    <ErrorMessagePanel errorMessage="@_error" />
                 </Rows>
             }
         </Columns>

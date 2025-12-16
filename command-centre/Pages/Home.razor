@@ -19,10 +19,7 @@
                    OnSubmit="@HandleQuickSearch" />
 
         @* ToDO: maybe into Error component, similar item used on Utilities page *@
-        @if (!string.IsNullOrWhiteSpace(_searchError))
-        {
-            <Markup Content="@_searchError" Foreground="@Color.Red" />
-        }
+        <ErrorMessagePanel errorMessage="@_searchError" />
     </Columns>
     <Newline />
 
@@ -86,19 +83,19 @@
             if (!success)
             {
                 _searchError = matches[0].IsActive == false
-                    ? $"Error: Repo '{matches[0].Name}' is inactive."
-                    : $"Error: Opening repo '{matches[0].Name}'' failed.";
+                    ? $"Repo '{matches[0].Name}' is inactive."
+                    : $"Opening repo '{matches[0].Name}'' failed.";
             }
             
             _searchQuery = "";
         }
         else if (matches.Count > 1)
         {
-            _searchError = $"Error: Multiple repos found matching '{_searchQuery}'. Please refine your search.";
+            _searchError = $"Multiple repos found matching '{_searchQuery}'. Please refine your search.";
         }
         else
         {
-            _searchError = $"Error: No repos found matching '{_searchQuery}'.";
+            _searchError = $"No repos found matching '{_searchQuery}'.";
         }
         
         StateHasChanged();

@@ -116,10 +116,9 @@
 
     private void OpenToIde(RepoInfo repo)
     {
-        // ToDo: refactor repoService - what exactly does this mean
         RepoService.OpenToIDE(repo);
-        return;
     }
+
     private async Task OpenToBrowser(RepoInfo repo)
     {
         @* ToDo: implement better error handling *@
@@ -133,6 +132,7 @@
 
         return;
     }
+
     private async Task OpenToFolder(RepoInfo repo)
     {
         if (OperatingSystem.IsMacOS())

@@ -1,15 +1,16 @@
 @* a common component to be used for any error message logging, so far this is Home.razor & Utilities.razor *@
 @* use a prop to pass error message into this component *@
 
-@* 
+@namespace CommandCentre.Components
 
-<Panel Title="❌ Error" BorderColor="@Color.Red">
-  <Markup Content="@errorMessage" Foreground="@Color.Red" />
-</Panel>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <Panel Title="❌ Error" BorderColor="@Color.Red">
+        <Markup Content="@errorMessage" Foreground="@Color.Red" />
+    </Panel>
+}
 
 @code {
     [Parameter]
-    public string ErrorMessage { get; set; }
+    public string errorMessage { get; set; }
 }
-
- *@
