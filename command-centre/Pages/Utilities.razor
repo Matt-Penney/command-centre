@@ -26,6 +26,8 @@
                 }
             </Rows>
 
+            <!-- ToDo: windows issue, rendering of this whole section doesnt work -->
+            <!-- note: maybe move into its own component, or new page to nav too -->
             @if (selectedUtility != null)
             {
                 <Rows>
@@ -59,28 +61,24 @@
                     <Markup Content="Result:" Decoration="@Decoration.Bold" />
                     <Newline />
 
-                    @if (_isExecuting)
-                    {
-                        <Columns>
-                            <Spinner />
-                            <Markup Content="Executing..." Foreground="@Color.Yellow" />
-                        </Columns>
-                        <Newline />
-                    }
-
                     @if (!string.IsNullOrEmpty(_output))
                     {
                         <Panel Title="📋 Output" BorderColor="@Color.Green">
                             <Markup Content="@_output" />
                         </Panel>
-                        <Newline />
                     }
-
-                    @if (!string.IsNullOrEmpty(_error))
+                    else if (!string.IsNullOrEmpty(_error))
                     {
                         <Panel Title="❌ Error" BorderColor="@Color.Red">
                             <Markup Content="@_error" Foreground="@Color.Red" />
                         </Panel>
+                    }
+                    else if (_isExecuting)
+                    {
+                        <Columns>
+                            <Spinner />
+                            <Markup Content="Executing..." Foreground="@Color.Yellow" />
+                        </Columns>
                     }
                 </Rows>
             }
