@@ -1,0 +1,82 @@
+@namespace CommandCentre.Components.Repo
+
+@using System.Diagnostics
+@using CommandCentre.Models
+@using CommandCentre.Services
+@using CommandCentre.Components
+
+@inject RepoService RepoService
+@inject GitHubService GitHubService
+
+<Markup Content="Quick Actions:" Decoration="@Decoration.Bold" />
+<Newline />
+
+@* ToDo: still got issues with IsActive and WSl together *@
+@if (selectedRepo != null && (selectedRepo.IsActive || selectedRepo.Type == "wsl"))
+{
+    <Panel Title="Quick Actions" BorderColor="@Color.Cyan">
+        <Rows>
+            <TextButton Content="⬇️ Pull Changes" OnClick="@(() => PullChanges(selectedRepo))" />
+            <Newline />
+            <TextButton Content="⬆️ Push Changes" OnClick="@(() => PushChanges(selectedRepo))" />
+            <Newline />
+
+            <Markup Content="Open with:" Decoration="@Decoration.Underline" />
+            <TextButton Content="IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
+            <TextButton Content="Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
+            <TextButton Content="Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
+        </Rows>
+    </Panel>
+}
+else if (selectedRepo != null)
+{
+    <ErrorMessagePanel errorMessage="Repository is inactive. Quick Actions not available." />
+}
+
+ @code {
+    [Parameter]
+    public Repo selectedRepo { get; set; }
+
+    private void OpenToIde(Repo repo)
+    {
+        RepoService.OpenToIDE(repo);
+    }
+
+    private async Task OpenToBrowser(Repo repo)
+    {
+        @* ToDo: implement better error handling *@
+        var url = await GitHubService.GetRepoBrowserUrl(repo);  
+        
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true
+        });
+
+        return;
+    }
+
+    private async Task OpenToFolder(Repo repo)
+    {
+        if (OperatingSystem.IsMacOS())
+        {
+            System.Diagnostics.Process.Start("open", repo.Path);
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            System.Diagnostics.Process.Start("explorer.exe", repo.Path);
+        }
+    }
+
+    private void PullChanges(Repo repo)
+    {
+        // Dont allow if current active branch is not main branch
+        @* RepoService.PullChanges(repo); *@
+    }
+
+    private void PushChanges(Repo repo)
+    {
+        // Require confirmation dialog?
+        @* RepoService.PushChanges(repo); *@
+    }
+}

@@ -2,48 +2,24 @@
 @* Repo name, owner, description, language, active status (from health check) *@
 @namespace CommandCentre.Components.Repo
 
-@using System.Diagnostics
 @using CommandCentre.Models
-@using CommandCentre.Services
-
-@inject RepoService RepoService
-@inject GitHubService GitHubService
 
 @if (selectedRepo != null)
 {
-    <Rows>
-        <Markup Content="Selected Repository Details:" Decoration="@Decoration.Bold" />
-        <Newline />
+    <Markup Content="Repository Details:" Decoration="@Decoration.Bold" />
+    <Newline />
 
-        @* Causing render issues, just on Windows it seems *@
-        <Panel Title="@($"ℹ️ {selectedRepo.Name}")" BorderColor="@Color.Cyan">
-            <Rows>
-                <Markup Content="@($"Owner: {selectedRepo.Owner}")" Foreground="@Color.Grey70" />
-                <Markup Content="@($"Description: {selectedRepo.Description}")" Foreground="@Color.Grey70" />
-                <Markup Content="@($"Language: {selectedRepo.Language}")" Foreground="@Color.Grey70" />
-                <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive)}")" />
-                <Markup Content="@($"Path: {selectedRepo.Path}")" Foreground="@Color.Grey70" />
-                <Markup Content="@($"Type: {selectedRepo.Type}")" Foreground="@Color.Grey70" />
-                <Newline />
-
-                @* still got issues with IsActive and WSl *@
-                @if (selectedRepo.IsActive || selectedRepo.Type == "wsl")
-                {   
-                    @* ToDo: move to its own component *@
-                    <Markup Content="Open with:" Decoration="@Decoration.Underline" />
-                    <Rows>
-                        <TextButton Content="IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
-                        <TextButton Content="Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
-                        <TextButton Content="Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
-                    </Rows>
-                }
-                else
-                {
-                    <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
-                }
-            </Rows>
-        </Panel>
-    </Rows>
+    @* Causing render issues, just on Windows it seems *@
+    <Panel Title="@($"ℹ️ {selectedRepo.Name}")" BorderColor="@Color.Cyan">
+        <Rows>
+            <Markup Content="@($"Owner: {selectedRepo.Owner}")" Foreground="@Color.Grey70" />
+            <Markup Content="@($"Description: {selectedRepo.Description}")" Foreground="@Color.Grey70" />
+            <Markup Content="@($"Language: {selectedRepo.Language}")" Foreground="@Color.Grey70" />
+            <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive)}")" />
+            <Markup Content="@($"Path: {selectedRepo.Path}")" Foreground="@Color.Grey70" />
+            <Markup Content="@($"Type: {selectedRepo.Type}")" Foreground="@Color.Grey70" />
+        </Rows>
+    </Panel>
 }
 
 @code {
@@ -53,40 +29,5 @@
     private string GetActiveStatusMarkup(bool isActive)
     {
         return isActive ? "✅" : "❌";
-    }
-
-    private void OpenToIde(Repo repo)
-    {
-        RepoService.OpenToIDE(repo);
-    }
-
-    private async Task OpenToBrowser(Repo repo)
-    {
-        @* ToDo: implement better error handling *@
-        var url = await GitHubService.GetRepoBrowserUrl(repo);  
-        
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = url,
-            UseShellExecute = true
-        });
-
-        return;
-    }
-
-    private async Task OpenToFolder(Repo repo)
-    {
-        if (OperatingSystem.IsMacOS())
-        {
-            System.Diagnostics.Process.Start("open", repo.Path);
-            return;
-        }
-        else if (OperatingSystem.IsWindows())
-        {
-            System.Diagnostics.Process.Start("explorer.exe", repo.Path);
-            return;
-        }
-
-        return;
     }
 }

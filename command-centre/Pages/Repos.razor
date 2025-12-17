@@ -30,7 +30,12 @@
             </Rows>
 
             <!-- ToDo: windows issue, rendering of this whole section doesnt work -->
-            <RepoDetailsPanel selectedRepo="@selectedRepo" />
+            <Rows>
+                <RepoDetailsPanel selectedRepo="@selectedRepo" />
+            </Rows>
+            <Rows>
+                <RepoActionsPanel selectedRepo="@selectedRepo" />
+            </Rows>
         </Columns>
     </Padder>
 </Panel>
