@@ -8,8 +8,11 @@
 @inject RepoService RepoService
 @inject GitHubService GitHubService
 
-<Markup Content="Quick Actions:" Decoration="@Decoration.Bold" />
-<Newline />
+@if (selectedRepo != null)
+{
+    <Markup Content="Quick Actions:" Decoration="@Decoration.Bold" />
+    <Newline />
+}
 
 @* ToDo: still got issues with IsActive and WSl together *@
 @if (selectedRepo != null && (selectedRepo.IsActive || selectedRepo.Type == "wsl"))
