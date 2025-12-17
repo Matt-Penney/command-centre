@@ -16,7 +16,7 @@
                 <TextInput Placeholder="Search Utilities..." 
                            Value="@_searchQuery" 
                            ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
-                           FocusedColor="@Color.Blue" />
+                           OnSubmit="@HandleQuickSearch" />
                 <Newline />
 
                 <Select Options="@GetFilteredUtilities().Select(u => $"{u.Name}").ToArray()"
@@ -143,5 +143,22 @@
             u.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
             u.Description.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
         );
+    }
+
+    private void HandleQuickSearch()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery)) return;
+
+        var matches = GetFilteredUtilities().ToList();
+
+        if (matches.Any() && matches.Count == 1)
+        {
+            selectedUtility = matches[0];
+            
+            _searchQuery = "";
+        }
+        
+        StateHasChanged();
+        // ToDo: focus on execute button
     }
 }

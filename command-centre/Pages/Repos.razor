@@ -16,7 +16,7 @@
                 <TextInput Placeholder="Search Repositories..." 
                            Value="@searchQuery" 
                            ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
-                           FocusedColor="@Color.Blue" />
+                           OnSubmit="@HandleQuickSearch" />
                 <Newline />
 
                  <Select Options="@GetFilteredRepos().Select(r => $"{r.Name}").ToArray()"
@@ -76,5 +76,22 @@
             return _repos;
         
         return RepoService.GetFilteredRepos(searchQuery);
+    }
+
+    private void HandleQuickSearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery)) return;
+
+        var matches = GetFilteredRepos().ToList();
+
+        if (matches.Any() && matches.Count == 1)
+        {
+            selectedRepo = matches[0];
+            
+            searchQuery = "";
+        }
+        
+        StateHasChanged();
+        // ToDo: focus on selected repo actions panel
     }
 }
