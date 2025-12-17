@@ -4,6 +4,8 @@
 @inject GitHubService GitHubService
 @inject Data.GlobalState GlobalState
 
+<!-- ToDo: for some reason windows doesnt re-render, need to change focus to have this come out of loading state -->
+<!-- ToDo: use WSL on windows to run this rather than powershell, do this before trying to fix any windows-specific issue -->
 <Panel Title="🔀 My Open PRs" BorderColor="@Color.Magenta">
     <Rows>
         @if (GlobalState.IsGitHubAuthenticated == false)
@@ -14,6 +16,7 @@
         }
         else if (_loadingPRs)
         {
+            @* ToDo: maybe make this a generic component with param for loading text content *@ 
             <Columns>
                 <Spinner />
                 <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
