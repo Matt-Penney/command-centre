@@ -1,38 +1,33 @@
+namespace CommandCentre.Services;
+
 using System.Text.Json;
 using System.Diagnostics;
 using CommandCentre.Models;
 using System.Threading.Tasks;
-
-namespace CommandCentre.Services;
 
 public class RepoService
 {
     private CommandService _commandService = new CommandService();
 
     private readonly string _configPath = Path.Combine(Directory.GetCurrentDirectory(), "repos.json");
-    private List<RepoInfo> _repos;
+    private List<Repo> _repos;
     
     public RepoService()
     {
         _repos = LoadRepos();
     }
     
-    public List<RepoInfo> GetAllRepos() => _repos;
+    public List<Repo> GetAllRepos() => _repos;
 
-    public List<RepoInfo> GetAllActiveRepos() => _repos.Where(r => r.IsActive.HasValue && r.IsActive.Value).ToList();
+    public List<Repo> GetAllActiveRepos() => _repos.Where(r => r.IsActive).ToList();
     
-    public List<RepoInfo> GetFilteredRepos(string query) => _repos.Where(r => r.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+    public List<Repo> GetFilteredRepos(string query) => _repos.Where(r => r.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
 
-    public RepoInfo? GetByName(string name) => _repos.FirstOrDefault(r => r.Name == name);
+    public Repo? GetByName(string name) => _repos.FirstOrDefault(r => r.Name == name);
     
-    public RepoInfo? GetRepoByPath(string path) => _repos.FirstOrDefault(r => r.Path == path);
-    
-    public bool HasActiveDirectory(RepoInfo repo)
-    {
-        return System.IO.Directory.Exists(repo.Path);
-    }
+    public Repo? GetByPath(string path) => _repos.FirstOrDefault(r => r.Path == path);
 
-    private List<RepoInfo> LoadRepos()
+    private List<Repo> LoadRepos()
     {
         try
         {
@@ -40,11 +35,22 @@ public class RepoService
             {
                 var json = File.ReadAllText(_configPath);
 
-                var repos = JsonSerializer.Deserialize<List<RepoInfo>>(json) ?? new List<RepoInfo>();
+                var repoDtos = JsonSerializer.Deserialize<List<RepoDTO>>(json) ?? new List<RepoDTO>();
 
-                foreach (var repo in repos)
+                List<Repo> repos = new List<Repo>();
+                foreach (var repoDto in repoDtos)
                 {
-                    repo.IsActive = HasActiveDirectory(repo);
+                    Repo repo = new Repo
+                    {
+                        Name = repoDto.Name,
+                        Path = repoDto.Path,
+                        Type = repoDto.Type,
+                        IsActive = HasActiveDirectory(repoDto.Path),
+                        Owner = "",
+                        Description = "",
+                        Language = ""
+                    };
+                    repos.Add(repo);
                 }
 
                 return repos;
@@ -55,10 +61,15 @@ public class RepoService
             // Console.WriteLine($"Error loading repos config: {ex.Message}");
         }
         
-        return new List<RepoInfo>();
+        return new List<Repo>();
+    }
+   
+    private bool HasActiveDirectory(string repoPath)
+    {
+        return System.IO.Directory.Exists(repoPath);
     }
 
-    public bool OpenToIDE(RepoInfo repo)
+    public bool OpenToIDE(Repo repo)
     {
         try {
             switch (repo.Type.ToLower())
@@ -84,7 +95,7 @@ public class RepoService
         }
     }
 
-    private void OpenInWsl(RepoInfo repo)
+    private void OpenInWsl(Repo repo)
     {
         CommandInfo commandInfo = new CommandInfo
         {
@@ -98,7 +109,7 @@ public class RepoService
         new CommandService().RunCommand(commandInfo).Wait();
     }
 
-    private void OpenInVisualStudioCode(RepoInfo repo)
+    private void OpenInVisualStudioCode(Repo repo)
     {
         CommandInfo commandInfo;
         if (OperatingSystem.IsWindows())
@@ -128,7 +139,7 @@ public class RepoService
         new CommandService().RunCommand(commandInfo).Wait();
     }
 
-    private void OpenInVisualStudio(RepoInfo repo)
+    private void OpenInVisualStudio(Repo repo)
     {
         CommandInfo commandInfo = new CommandInfo
         {

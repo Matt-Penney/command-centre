@@ -54,7 +54,7 @@
     private System.Timers.Timer? _timer;
     private bool _disposed = false;
 
-    private List<RepoInfo> _repos = new();
+    private List<Repo> _repos = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,7 +88,7 @@
 
             if (!success)
             {
-                _searchError = matches[0].IsActive == false
+                _searchError = !matches[0].IsActive
                     ? $"Repo '{matches[0].Name}' is inactive."
                     : $"Opening repo '{matches[0].Name}'' failed.";
             }

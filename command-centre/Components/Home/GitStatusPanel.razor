@@ -20,7 +20,7 @@
 </Panel>
 
 @code {
-    private List<RepoInfo> _repos = new();
+    private List<Repo> _repos = new();
     private Dictionary<string, RepoStatus> _repoStatuses = new();
     private bool _disposed = false;
 
@@ -57,7 +57,7 @@
         }
     }
 
-    private async Task<RepoStatus> LoadSingleRepoStatus(RepoInfo repo)
+    private async Task<RepoStatus> LoadSingleRepoStatus(Repo repo)
     {
         if (_disposed) return new RepoStatus { Name = repo.Name, HasChanges = false, ChangeCount = 0, IsLoading = false };
         
@@ -92,11 +92,11 @@
         }
     }
 
-    private async Task<RepoStatus> GetRepoStatus(RepoInfo repo)
+    private async Task<RepoStatus> GetRepoStatus(Repo repo)
     {
         @* ToDo: doesnt fully work, need to look into it really, maybe change to sync status like below*@
         <!--
-            private string GetSyncStatus(RepoInfo repo)
+            private string GetSyncStatus(Repo repo)
             {
                 var status = GitHubService.GetSyncStatus(repo);
                 return status switch
@@ -118,7 +118,7 @@
             HasChanges = hasChanges,
             ChangeCount = hasChanges ? output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length : 0,
             IsLoading = false,
-            IsActive = RepoService.HasActiveDirectory(repo)
+            IsActive = repo.IsActive
         };
     }
 

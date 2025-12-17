@@ -1,11 +1,10 @@
 @page "/repos"
 
-@using System.Diagnostics
 @using CommandCentre.Models
 @using CommandCentre.Services
+@using CommandCentre.Components.Repo
 
 @inject RepoService RepoService
-@inject GitHubService GitHubService
 
 <Panel Title="📁 Repositories" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
     <Padder Padding="@(new (0, 1, 0, 0))">
@@ -31,39 +30,7 @@
             </Rows>
 
             <!-- ToDo: windows issue, rendering of this whole section doesnt work -->
-            <!-- note: maybe move into its own component, or new page to nav too -->
-            @if (selectedRepo != null)
-            {
-                @* maybe look into FocusOrder and stuff, maybe having the second panel have a lower focus index than the select list, then on appearing it will focus onto the second panel *@
-                <Rows>
-                    <Markup Content="Selected Repository Details" Decoration="@Decoration.Bold" />
-                    <Newline />
-                
-                    <!-- Causing render issues, just on Windows it seems -->
-                    <Panel Title="@($"ℹ️ {selectedRepo.Name}")" BorderColor="@Color.Cyan">
-                        <Rows>
-                            <Markup Content="@($"Active: {GetActiveStatusMarkup(selectedRepo.IsActive)}")" />
-                            <Markup Content="@($"Path: {selectedRepo.Path}")" Foreground="@Color.Grey70" />
-                            <Markup Content="@($"Type: {selectedRepo.Type}")" Foreground="@Color.Grey70" />
-                            <Newline />
-
-                            @if (selectedRepo.IsActive == true || selectedRepo.Type == "wsl")
-                            {   
-                                <Markup Content="Open with:" Decoration="@Decoration.Underline" />
-                                <Rows>
-                                    <TextButton Content="IDE" OnClick="@(() => OpenToIde(selectedRepo))" />
-                                    <TextButton Content="Browser" OnClick="@(() => OpenToBrowser(selectedRepo))" />
-                                    <TextButton Content="Folder" OnClick="@(() => OpenToFolder(selectedRepo))" />
-                                </Rows>
-                            }
-                            else
-                            {
-                                <Markup Content="Repository is inactive. Actions not available." Foreground="@Color.Red" />
-                            }
-                        </Rows>
-                    </Panel>
-                </Rows>
-            }
+            <RepoDetailsPanel selectedRepo="@selectedRepo" />
         </Columns>
     </Padder>
 </Panel>
@@ -73,24 +40,12 @@
 
 @code {
     private string searchQuery = "";
-    private RepoInfo selectedRepo = null;
-    private List<RepoInfo> _repos = new();
+    private Repo selectedRepo = null;
+    private List<Repo> _repos = new();
 
     protected override void OnInitialized()
     {
         _repos = RepoService.GetAllRepos();
-    }
-
-    private string GetActiveStatusMarkup(bool? isActive)
-    {
-        if (isActive == null)
-        {
-            return "❓";
-        }
-        else
-        {
-            return isActive.Value ? "✅" : "❌";
-        }
     }
 
     private void SelectRepo(string repoName)
@@ -110,46 +65,11 @@
         StateHasChanged();
     }
 
-    private IEnumerable<RepoInfo> GetFilteredRepos()
+    private IEnumerable<Repo> GetFilteredRepos()
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
             return _repos;
         
         return RepoService.GetFilteredRepos(searchQuery);
-    }
-
-    private void OpenToIde(RepoInfo repo)
-    {
-        RepoService.OpenToIDE(repo);
-    }
-
-    private async Task OpenToBrowser(RepoInfo repo)
-    {
-        @* ToDo: implement better error handling *@
-        var url = await GitHubService.GetRepoBrowserUrl(repo);  
-        
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = url,
-            UseShellExecute = true
-        });
-
-        return;
-    }
-
-    private async Task OpenToFolder(RepoInfo repo)
-    {
-        if (OperatingSystem.IsMacOS())
-        {
-            System.Diagnostics.Process.Start("open", repo.Path);
-            return;
-        }
-        else if (OperatingSystem.IsWindows())
-        {
-            System.Diagnostics.Process.Start("explorer.exe", repo.Path);
-            return;
-        }
-
-        return;
     }
 }

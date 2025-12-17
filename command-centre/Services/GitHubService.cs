@@ -120,12 +120,12 @@ public class GitHubService
         return (allPRs.OrderByDescending(pr => pr.CreatedAt).ToList(), statuses);
     }
 
-    private async Task<(List<PullRequest> prs, PRLoadStatus? status)> GetRepoPullRequests(RepoInfo repo)
+    private async Task<(List<PullRequest> prs, PRLoadStatus? status)> GetRepoPullRequests(Repo repo)
     {
         var prs = new List<PullRequest>();
         
         // Check if repo path exists
-        if (!_repoService.HasActiveDirectory(repo) && repo.Type != "wsl") // wsl repos may use ~ paths
+        if (!repo.IsActive && repo.Type != "wsl") // wsl repos may use ~ paths
         {
             return (prs, new PRLoadStatus
             {
@@ -320,7 +320,7 @@ public class GitHubService
         }
     }
 
-    public async Task<string> GetRepoBrowserUrl(RepoInfo repo)
+    public async Task<string> GetRepoBrowserUrl(Repo repo)
     {
         var remoteUrl = await RunGitCommand(repo.Path, "config --get remote.origin.url");
 
