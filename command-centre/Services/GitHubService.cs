@@ -271,12 +271,12 @@ public class GitHubService
         {
             if (url.StartsWith("git@github.com:"))
             {
-                var parts = url.Replace("git@github.com:", "").Replace(".git", "").Split('/');
+                var parts = url.Replace("git@github.com:", string.Empty).Replace(".git", string.Empty).Split('/');
                 return (parts[0], parts[1]);
             }
             else if (url.Contains("github.com"))
             {
-                var uri = new Uri(url.Replace(".git", ""));
+                var uri = new Uri(url.Replace(".git", string.Empty));
                 var segments = uri.AbsolutePath.Trim('/').Split('/');
                 if (segments.Length >= 2)
                 {
@@ -289,7 +289,7 @@ public class GitHubService
             // Console.WriteLine($"Error parsing GitHub URL: {ex.Message}");
         }
 
-        return ("", "");
+        return (string.Empty, string.Empty);
     }
 
     private async Task<string> RunGitCommand(string repoPath, string arguments)
@@ -316,7 +316,7 @@ public class GitHubService
         }
         catch
         {
-            return "";
+            return string.Empty;
         }
     }
 
@@ -329,21 +329,21 @@ public class GitHubService
         {
             remoteUrl = await RunGitCommand("C://Repos//customer-portal", "config --get remote.origin.url");
         }
-        return remoteUrl.Replace(".git", "");
+        return remoteUrl.Replace(".git", string.Empty);
         // gh search repos --match name "customer-portal" --owner "ignite-systems" --json url;
     }
 
     private class GitHubPR
     {
         public int number { get; set; }
-        public string title { get; set; } = "";
-        public string url { get; set; } = "";
+        public string title { get; set; } = string.Empty;
+        public string url { get; set; } = string.Empty;
         public List<StatusCheck>? statusCheckRollup { get; set; }
         public DateTime createdAt { get; set; }
     }
 
     private class StatusCheck
     {
-        public string conclusion { get; set; } = "";
+        public string conclusion { get; set; } = string.Empty;
     }
 }
