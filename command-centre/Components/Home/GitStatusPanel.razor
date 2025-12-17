@@ -1,8 +1,11 @@
 @namespace CommandCentre.Components.Home
-@using System.Diagnostics
+
+@using CommandCentre.Models
+@using CommandCentre.Services
+
 @implements IDisposable
+
 @inject RepoService RepoService
-@inject CommandService CommandService
 
 <Panel Title="🔀 Git Changes Status" BorderColor="@Color.Green" Width="25">
     <Rows>

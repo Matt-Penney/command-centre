@@ -1,6 +1,7 @@
 @namespace CommandCentre.Components
 
 @using Spectre.Console
+
 @inject NavigationManager Nav
 
 <Select Options="@(_tabs.Select(t => t.Label).ToArray())"

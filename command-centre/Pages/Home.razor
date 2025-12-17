@@ -1,10 +1,16 @@
 @page "/"
 @page "/home"
+
 @using System.Diagnostics
 @using CommandCentre.Components.Home
+@using CommandCentre.Components
+@using CommandCentre.Services
+@using CommandCentre.Models
+
+@implements IDisposable
+
 @inject RepoService RepoService
 @inject NavigationManager Navigation
-@implements IDisposable
 
 <Rows>
     <Markup Content="@($"⚡️ Dashboard - {now}")" Foreground="@Color.Blue" Decoration="@Decoration.Bold" />
@@ -26,9 +32,9 @@
         <SystemStatsPanel />
         <Newline />
         <TasksPanel />
-        @* <Newline /> *@
+        <Newline />
         @*For no obvious reason, this is causing render issues, fixed it seems *@
-        @* <TimeTrackerPanel />  *@
+        <TimeTrackerPanel /> 
     </Columns>
 
     <Newline />
