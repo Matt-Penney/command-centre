@@ -1,8 +1,8 @@
+namespace CommandCentre.Services;
+
 using System.Diagnostics;
 using System.Text.Json;
 using CommandCentre.Models;
-
-namespace CommandCentre.Services;
 
 public class UtilityService
 {
