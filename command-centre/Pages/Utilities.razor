@@ -1,6 +1,9 @@
 @page "/utilities"
+
 @using CommandCentre.Models
 @using CommandCentre.Services
+@using CommandCentre.Components
+
 @inject UtilityService UtilityService
 
 <Panel Title="🛠️ Utilities" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
@@ -71,10 +74,7 @@
                     }
                     else if (_isExecuting)
                     {
-                        <Columns>
-                            <Spinner />
-                            <Markup Content="Executing..." Foreground="@Color.Yellow" />
-                        </Columns>
+                        <LoadingSpinner loadingMessage="Executing..." />
                     }
 
                     <ErrorMessagePanel errorMessage="@_error" />

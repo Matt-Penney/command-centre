@@ -3,6 +3,7 @@
 @using CommandCentre.Data
 @using CommandCentre.Services
 @using CommandCentre.Models
+@using CommandCentre.Components
 
 @implements IDisposable
 
@@ -21,11 +22,7 @@
         }
         else if (_loadingPRs)
         {
-            @* ToDo: maybe make this a generic component with param for loading text content *@ 
-            <Columns>
-                <Spinner />
-                <Markup Content="Loading pull requests..." Foreground="@Color.Grey" />
-            </Columns>
+            <LoadingSpinner loadingMessage="Loading Pull Requests..."  />
         }
         else
         {

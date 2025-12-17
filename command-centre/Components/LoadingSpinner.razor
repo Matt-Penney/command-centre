@@ -1,0 +1,11 @@
+@namespace CommandCentre.Components
+
+<Columns>
+    <Spinner />
+    <Markup Content="@loadingMessage" Foreground="@Color.Grey" />
+</Columns>
+
+@code {
+    [Parameter]
+    public string loadingMessage { get; set; }
+}
