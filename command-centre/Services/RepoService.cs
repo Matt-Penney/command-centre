@@ -48,7 +48,8 @@ public class RepoService
                         IsActive = HasActiveDirectory(repoDto.Path),
                         Owner = "",
                         Description = "",
-                        Language = ""
+                        Language = "",
+                        Url = ""
                     };
                     repos.Add(repo);
                 }
