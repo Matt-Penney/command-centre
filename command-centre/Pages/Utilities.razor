@@ -3,8 +3,11 @@
 @using CommandCentre.Models
 @using CommandCentre.Services
 @using CommandCentre.Components
+@using System.Threading.Tasks
+@using RazorConsole.Core.Focus
 
 @inject UtilityService UtilityService
+@inject FocusManager FocusManager
 
 <Panel Title="🛠️ Utilities" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
     <Padder Padding="@(new (0, 1, 0, 0))">
@@ -14,8 +17,8 @@
                 <Newline />
 
                 <TextInput Placeholder="Search Utilities..." 
-                           Value="@_searchQuery" 
-                           ValueChanged="@((string value) => { _searchQuery = value; StateHasChanged(); })"
+                           Value="@searchQuery" 
+                           ValueChanged="@((string value) => { searchQuery = value; StateHasChanged(); })"
                            OnSubmit="@HandleQuickSearch" />
                 <Newline />
 
@@ -85,7 +88,7 @@
 </Panel>
 
 @code {
-    private string _searchQuery = "";
+    private string searchQuery = "";
     private UtilityScript selectedUtility = null;
     private List<UtilityScript> _utilities = new();
     private bool _isExecuting = false;
@@ -104,7 +107,7 @@
         {
             throw new InvalidOperationException($"Utility '{utilityName}' not found.");
         }
-        
+
         selectedUtility = utility;
         _output = "";
         _error = "";
@@ -136,29 +139,29 @@
 
     private IEnumerable<UtilityScript> GetFilteredUtilities()
     {
-        if (string.IsNullOrWhiteSpace(_searchQuery))
+        if (string.IsNullOrWhiteSpace(searchQuery))
             return _utilities;
-        
-        return _utilities.Where(u => 
-            u.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
-            u.Description.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
-        );
+
+        return UtilityService.GetFilteredUtilities(searchQuery);
     }
 
-    private void HandleQuickSearch()
+    private async Task HandleQuickSearch()
     {
-        if (string.IsNullOrWhiteSpace(_searchQuery)) return;
+        if (string.IsNullOrWhiteSpace(searchQuery)) return;
 
         var matches = GetFilteredUtilities().ToList();
 
         if (matches.Any() && matches.Count == 1)
         {
             selectedUtility = matches[0];
-            
-            _searchQuery = "";
+            searchQuery = "";
+            await InvokeAsync(StateHasChanged);
+
+            await FocusManager.FocusNextAsync();
+            await Task.Delay(100); // this is needed to allow time for the selectedUtility details
+            await FocusManager.FocusNextAsync();
+
+            await InvokeAsync(StateHasChanged);
         }
-        
-        StateHasChanged();
-        // ToDo: focus on execute button
     }
 }

@@ -3,8 +3,11 @@
 @using CommandCentre.Models
 @using CommandCentre.Services
 @using CommandCentre.Components.Repo
+@using RazorConsole.Core.Focus
+@using System.Threading.Tasks
 
 @inject RepoService RepoService
+@inject FocusManager FocusManager
 
 <Panel Title="📁 Repositories" Border="BoxBorder.None" Expand="true" TitleColor="@Color.Blue">
     <Padder Padding="@(new (0, 1, 0, 0))">
@@ -74,11 +77,11 @@
     {
         if (string.IsNullOrWhiteSpace(searchQuery))
             return _repos;
-        
+
         return RepoService.GetFilteredRepos(searchQuery);
     }
 
-    private void HandleQuickSearch()
+    private async Task HandleQuickSearch()
     {
         if (string.IsNullOrWhiteSpace(searchQuery)) return;
 
@@ -87,11 +90,14 @@
         if (matches.Any() && matches.Count == 1)
         {
             selectedRepo = matches[0];
-            
             searchQuery = "";
+            await InvokeAsync(StateHasChanged);
+
+            await FocusManager.FocusNextAsync();
+            await Task.Delay(100); // this is needed to allow time for the selectedRepo details panel to render before focusing
+            await FocusManager.FocusNextAsync();
+
+            await InvokeAsync(StateHasChanged);
         }
-        
-        StateHasChanged();
-        // ToDo: focus on selected repo actions panel
     }
 }

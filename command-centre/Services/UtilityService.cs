@@ -38,6 +38,17 @@ public class UtilityService
 
     public UtilityScript? GetByName(string name) =>_utilities.FirstOrDefault(u => u.Name == name);
 
+    public IEnumerable<UtilityScript> GetFilteredUtilities(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return _utilities;
+        
+        return _utilities.Where(u => 
+            u.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            u.Description.Contains(query, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
     public async Task<(bool successResult, string outputResult, string errorResult)> ExecuteUtility(UtilityScript utility)
     {
         try

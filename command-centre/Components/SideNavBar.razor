@@ -1,15 +1,18 @@
 @namespace CommandCentre.Components
 
 @using Spectre.Console
+@using RazorConsole.Core.Focus
+@using System.Threading.Tasks
 
 @inject NavigationManager Nav
+@inject FocusManager FocusManager
 
 <Select Options="@(_tabs.Select(t => t.Label).ToArray())"
         Value="@SelectedTab"
         ValueChanged="@SelectTab"
         IsFocused="@IsFocused"
         IsFocusedChanged="@OnSelectFocusChanged"
-        Expand="false"/>
+        Expand="false" />
 
 @code {
     private string SelectedTab = "Home";
@@ -23,7 +26,7 @@
         ("settings", "Settings"),
     };
 
-    private void SelectTab(string tabName)
+    private async Task SelectTab(string tabName)
     {
         var key = _tabs.FirstOrDefault(t => t.Label == tabName).Key;
         if (key == null)
@@ -32,6 +35,8 @@
         }
         SelectedTab = tabName;
         Nav.NavigateTo(key);
+
+        await MoveFocus();
     }
 
     [Parameter]
@@ -55,6 +60,12 @@
         }
 
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+
+    private async Task MoveFocus()
+    {
+        await Task.Delay(100); // allow time for navigation to complete
+        await FocusManager.FocusNextAsync();
     }
 
 }
